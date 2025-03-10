@@ -1,0 +1,16 @@
+{
+  "name": "capitrack",
+  "version": "1.0.0",
+  "description": "Finance tracker for student orgs",
+  "repository": {
+    "type": "git",
+    "url": "github.gatech.edu/CreateX-Capstone8/capitrack"
+  },
+  "scripts": {
+  },
+  "author": "Create-X-8",
+  "license": "ISC",
+  "dependencies": {
+    "firebase-tools": "^13.32.0"
+  }
+}
