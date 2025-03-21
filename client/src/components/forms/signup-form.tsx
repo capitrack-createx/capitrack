@@ -39,20 +39,21 @@ export function SignUpForm({
           .then(() => {
             // 3. Redirect to dashboard page
             if (user) {
-              setLocation("/dashboard");
+              setLocation("/app");
             }
           })
           .catch((dbError) => {
             console.log("Error creating user document", dbError);
             // On failure, undo step 2 (rollback)
+            setIsLoading(false);
             user.delete();
           });
       })
       .catch((authError) => {
         console.log("Error creating user:", authError);
+        setIsLoading(false);
         // TODO: Toast sign up error
-      })
-      .finally(() => setIsLoading(false));
+      });
   };
 
   return (
@@ -75,7 +76,7 @@ export function SignUpForm({
             name="name"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Full Name</FormLabel>
+                <FormLabel>Name</FormLabel>
                 <FormControl>
                   <Input {...field} placeholder="George Burdell" />
                 </FormControl>

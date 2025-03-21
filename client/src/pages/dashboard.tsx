@@ -1,9 +1,7 @@
-import { logout } from "@/services/auth-service";
-export function DashBoard() {
+export const Dashboard = () => {
   return (
     <>
-      <div>Authenticated </div>
-      <button onClick={logout}> Logout </button>
+      <div>Dashboard content</div>
     </>
   );
-}
+};
