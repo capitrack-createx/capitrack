@@ -6,11 +6,12 @@
     "type": "git",
     "url": "github.gatech.edu/CreateX-Capstone8/capitrack"
   },
-  "scripts": {
-  },
+  "scripts": {},
   "author": "Create-X-8",
   "license": "ISC",
   "dependencies": {
-    "firebase-tools": "^13.32.0"
+    "firebase-tools": "^13.32.0",
+    "libphonenumber-js": "^1.12.6",
+    "zod": "^3.24.2"
   }
 }
