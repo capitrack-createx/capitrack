@@ -44,7 +44,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
           </div>
         </header>
         <div className="flex flex-1 flex-col gap-4 px-4 py-10">
-          {userOrgs.length > 0 ? children : <>create your org</>}
+          {userOrgs.length >= 0 ? children : <>create your org</>}
         </div>
       </SidebarInset>
     </SidebarProvider>
