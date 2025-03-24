@@ -6,17 +6,20 @@ import {
   PieChart,
   Users,
 } from "lucide-react";
-import { Link } from "wouter";
 import {
   Sidebar,
   SidebarContent,
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
+  SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
+import { Link } from "wouter";
+import { TeamSwitcher } from "@/components/ui/team-switcher";
+import { Organization } from "@shared/schema";
 
 // Menu items.
 const items = [
@@ -52,9 +55,16 @@ const items = [
   },
 ];
 
-export function AppSidebar() {
+type AppSidebarProps = {
+  organizations: Organization[];
+};
+
+export function AppSidebar({ organizations }: AppSidebarProps) {
   return (
     <Sidebar variant="sidebar" side="left" collapsible="icon">
+      <SidebarHeader>
+        <TeamSwitcher teams={organizations} />
+      </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupLabel>capitrack</SidebarGroupLabel>
@@ -63,7 +73,7 @@ export function AppSidebar() {
               {items.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild>
-                    <Link href={item.url}>
+                    <Link to={item.url}>
                       <item.icon />
                       <span>{item.title}</span>
                     </Link>
