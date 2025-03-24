@@ -12,6 +12,7 @@ export const InsertUserSchema = z.object({
     isValidPhoneNumber,
     { message: "Invalid phone number, include extension +1"}
   ).transform((value) => parsePhoneNumberWithError(value).number.toString()).optional().or(z.literal('')),
+  organizationName: z.string().min(2, { message: "Organization name must be at least 2 characters." }),
 });
 
 
