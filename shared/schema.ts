@@ -45,6 +45,37 @@ export const OrganizationSchema = z.object({
 
 
 
+export const FeeSchema = z.object({
+  id: z.string().optional(),
+  name: z.string().min(2, { message: "Fee name must be at least 2 characters." }),
+  amount: z.number().min(0, { message: "Amount must be greater than 0" }),
+  dueDate: z.date(),
+  memberIds: z.array(z.string()),
+  orgId: z.string()
+});
+
+export const PaymentMethodEnum = z.enum([
+  'CASH',
+  'CHECK',
+  'VENMO',
+  'ZELLE',
+  'CREDIT_CARD',
+  'OTHER'
+]);
+
+export const FeeAssignmentSchema = z.object({
+  id: z.string().optional(),
+  feeId: z.string(),
+  memberId: z.string(),
+  isPaid: z.boolean(),
+  paidDate: z.date().optional(),
+  paymentMethod: PaymentMethodEnum.optional(),
+  notes: z.string().optional()
+});
+
 export type Organization = z.infer<typeof OrganizationSchema>
 export type InsertUser = z.infer<typeof InsertUserSchema>;
 export type User = z.infer<typeof UserSchema>;
+export type Fee = z.infer<typeof FeeSchema>;
+export type PaymentMethod = z.infer<typeof PaymentMethodEnum>;
+export type FeeAssignment = z.infer<typeof FeeAssignmentSchema>;
