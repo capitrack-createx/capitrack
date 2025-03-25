@@ -1,6 +1,10 @@
 import { collection, addDoc, getDocs, query, where, doc, getDoc, Timestamp, updateDoc } from 'firebase/firestore';
 import { db } from '../firebase';
-import type { Member, Organization, Fee, FeeAssignment } from '../types';
+import type { Member, Organization, Fee, FeeAssignment, PaymentMethod } from '../types';
+
+const convertTimestampToDate = (data: any): Date => {
+  return (data.dueDate || data.paidDate || data.createdAt).toDate();
+};
 
 export const dbService = {
   // Members
@@ -88,6 +92,134 @@ export const dbService = {
     } catch (error) {
       console.error('Error getting user organization:', error);
       return null;
+    }
+  },
+
+  // Fees
+  async addFee(data: Omit<Fee, 'id'>): Promise<Fee> {
+    try {
+      if (!data.memberIds || data.memberIds.length === 0) {
+        throw new Error('At least one member must be assigned to the fee');
+      }
+
+      const docRef = await addDoc(collection(db, 'fees'), {
+        ...data,
+        dueDate: Timestamp.fromDate(data.dueDate)
+      });
+
+      // Create fee assignments for each member
+      await Promise.all(
+        data.memberIds.map(memberId =>
+          this.createFeeAssignment({
+            feeId: docRef.id,
+            memberId,
+            isPaid: false
+          })
+        )
+      );
+
+      return { ...data, id: docRef.id };
+    } catch (error) {
+      console.error('Error adding fee:', error);
+      throw new Error('Failed to add fee');
+    }
+  },
+
+  async getFees(orgId: string): Promise<Fee[]> {
+    try {
+      const q = query(
+        collection(db, 'fees'),
+        where('orgId', '==', orgId)
+      );
+      const snapshot = await getDocs(q);
+      return snapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+          ...data,
+          id: doc.id,
+          dueDate: convertTimestampToDate(data)
+        } as Fee;
+      });
+    } catch (error) {
+      console.error('Error getting fees:', error);
+      return [];
+    }
+  },
+
+  // Fee Assignments
+  async createFeeAssignment(data: Omit<FeeAssignment, 'id'>): Promise<FeeAssignment> {
+    try {
+      const docRef = await addDoc(collection(db, 'feeAssignments'), {
+        ...data,
+        paidDate: data.paidDate ? Timestamp.fromDate(data.paidDate) : null
+      });
+      return { ...data, id: docRef.id };
+    } catch (error) {
+      console.error('Error creating fee assignment:', error);
+      throw new Error('Failed to create fee assignment');
+    }
+  },
+
+  async getFeeAssignments(feeId: string): Promise<FeeAssignment[]> {
+    try {
+      const q = query(
+        collection(db, 'feeAssignments'),
+        where('feeId', '==', feeId)
+      );
+      const snapshot = await getDocs(q);
+      return snapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+          ...data,
+          id: doc.id,
+          paidDate: data.paidDate ? convertTimestampToDate(data) : undefined
+        } as FeeAssignment;
+      });
+    } catch (error) {
+      console.error('Error getting fee assignments:', error);
+      return [];
+    }
+  },
+
+  async getMemberFeeAssignments(memberId: string): Promise<FeeAssignment[]> {
+    try {
+      const q = query(
+        collection(db, 'feeAssignments'),
+        where('memberId', '==', memberId)
+      );
+      const snapshot = await getDocs(q);
+      return snapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+          ...data,
+          id: doc.id,
+          paidDate: data.paidDate ? convertTimestampToDate(data) : undefined
+        } as FeeAssignment;
+      });
+    } catch (error) {
+      console.error('Error getting member fee assignments:', error);
+      return [];
+    }
+  },
+
+  async updateFeeAssignment(
+    id: string,
+    data: Partial<Pick<FeeAssignment, 'isPaid' | 'paidDate' | 'paymentMethod' | 'notes'>>
+  ): Promise<void> {
+    try {
+      const docRef = doc(db, 'feeAssignments', id);
+      const updateData: Record<string, any> = {};
+      
+      if (data.isPaid !== undefined) updateData.isPaid = data.isPaid;
+      if (data.paidDate) updateData.paidDate = Timestamp.fromDate(data.paidDate);
+      if (data.paymentMethod) updateData.paymentMethod = data.paymentMethod;
+      if (data.notes !== undefined) updateData.notes = data.notes;
+
+      console.log('Updating fee assignment with:', updateData);
+      await updateDoc(docRef, updateData);
+    } catch (error) {
+      console.error('Error updating fee assignment:', error);
+      throw new Error('Failed to update fee assignment');
     }
   },
 };
