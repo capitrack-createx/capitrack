@@ -21,12 +21,15 @@ export interface Member {
     orgId: string; // Reference to the organization
   }
   
-  export interface FeeAssignment {
+  export type PaymentMethod = 'CASH' | 'CHECK' | 'VENMO' | 'ZELLE' | 'CREDIT_CARD' | 'OTHER';
+
+export interface FeeAssignment {
     id: string;
     feeId: string;
     memberId: string;
     isPaid: boolean;
     paidAmount?: number;
     paidDate?: Date;
-    transactionId?: string;
+    paymentMethod?: PaymentMethod;
+    notes?: string;
   } 
