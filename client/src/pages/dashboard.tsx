@@ -1,9 +1,10 @@
 import { logout } from "@/services/auth-service";
+import TransactionsPage from "./transactions-page";
 export function DashBoard() {
   return (
     <>
-      <div>Authenticated </div>
-      <button onClick={logout}> Logout </button>
+      <h1>Txn Test</h1>
+      <TransactionsPage></TransactionsPage>
     </>
   );
 }
