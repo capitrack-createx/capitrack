@@ -19,11 +19,8 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Member } from "../types";
-import { dbService } from "@/services/db-service";
-import { useAuth } from "@/services/auth-service";
 
 export function MembersPage() {
-  const { user } = useAuth();
   const [members, setMembers] = useState<Member[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -33,32 +30,21 @@ export function MembersPage() {
     },
   });
 
-  const loadMembers = async () => {
-    if (!user) return;
-    const org = await dbService.getUserOrganization(user.uid);
-    if (org) {
-      const membersList = await dbService.getMembers(org.id);
-      setMembers(membersList);
-    }
-  };
-
-  useEffect(() => {
-    loadMembers();
-  }, [user]);
-
   const onSubmit = async (data: Omit<Member, 'id'>) => {
-    if (!user) return;
     setIsLoading(true);
     try {
-      const org = await dbService.getUserOrganization(user.uid);
-      if (org) {
-        await dbService.addMember({
-          ...data,
-          orgId: org.id,
-        });
-        await loadMembers();
-        form.reset();
-      }
+      // Create a new member with a temporary ID
+      const newMember: Member = {
+        ...data,
+        id: Date.now().toString(), // Using timestamp as temporary ID
+        orgId: 'temp-org-id',
+        createdAt: new Date(),
+        role: 'MEMBER',
+      };
+      
+      // Add to local state
+      setMembers(prevMembers => [...prevMembers, newMember]);
+      form.reset();
     } catch (error) {
       console.error("Error adding member:", error);
     }
@@ -73,45 +59,47 @@ export function MembersPage() {
           <p className="text-muted-foreground">Manage your team members</p>
         </div>
 
-        <div className="flex gap-6">
+        <div className="flex flex-col lg:flex-row gap-6">
           {/* Member List Section */}
-          <div className="flex-1">
+          <div className="w-full lg:flex-1">
             <div className="text-left mb-4">
               <h2 className="text-lg font-semibold">Member List</h2>
             </div>
-            <div className="rounded-md border">
-              <div className="grid grid-cols-5 gap-4 p-4 bg-muted/50 font-medium">
-                <div>Name</div>
-                <div>Email</div>
-                <div>Phone</div>
-                <div>Join Date</div>
-                <div>Status</div>
-              </div>
-              <div className="divide-y">
-                {members.map((member) => (
-                  <div key={member.id} className="grid grid-cols-5 gap-4 p-4 items-center hover:bg-muted/50">
-                    <div>{member.name}</div>
-                    <div>{member.email}</div>
-                    <div>{member.phoneNumber || '-'}</div>
-                    <div>{new Date(member.createdAt || '').toLocaleDateString() || '-'}</div>
-                    <div>
-                      <span className="inline-flex items-center rounded-full px-2 py-1 text-xs font-medium bg-green-50 text-green-700 ring-1 ring-inset ring-green-600/20">
-                        Active
-                      </span>
+            <div className="rounded-md border overflow-x-auto">
+              <div className="min-w-[600px] lg:min-w-0">
+                <div className="grid grid-cols-5 gap-4 p-4 bg-muted/50 font-medium">
+                  <div>Name</div>
+                  <div>Email</div>
+                  <div>Phone</div>
+                  <div>Join Date</div>
+                  <div>Status</div>
+                </div>
+                <div className="divide-y">
+                  {members.map((member) => (
+                    <div key={member.id} className="grid grid-cols-5 gap-4 p-4 items-center hover:bg-muted/50">
+                      <div className="truncate">{member.name || '-'}</div>
+                      <div className="truncate">{member.email || '-'}</div>
+                      <div className="truncate">{member.phoneNumber || '-'}</div>
+                      <div>{member.createdAt ? new Date(member.createdAt).toLocaleDateString() : '-'}</div>
+                      <div>
+                        <span className="inline-flex items-center rounded-full px-2 py-1 text-xs font-medium bg-green-50 text-green-700 ring-1 ring-inset ring-green-600/20">
+                          Active
+                        </span>
+                      </div>
                     </div>
-                  </div>
-                ))}
-                {members.length === 0 && (
-                  <div className="p-4 text-center text-muted-foreground">
-                    No members found
-                  </div>
-                )}
+                  ))}
+                  {members.length === 0 && (
+                    <div className="p-4 text-center text-muted-foreground">
+                      No members found
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>
 
           {/* Add Member Card */}
-          <Card className="w-[400px]">
+          <Card className="w-full lg:w-[400px]">
             <CardHeader>
               <CardTitle>Add New Member</CardTitle>
               <CardDescription>
