@@ -358,26 +358,38 @@ export const FeesPage = () => {
                   </Label>
                 </div>
 
-                {!assignToAll && members.length > 0 && (
-                  <div className="border rounded-md p-4 max-h-[200px] overflow-y-auto space-y-2">
-                    {members.map(member => (
-                      <div key={member.id} className="flex items-center space-x-2">
-                        <input
-                          type="checkbox"
-                          id={`member-${member.id}`}
-                          name="memberIds"
-                          value={member.id}
-                          className="h-4 w-4 rounded border-gray-300"
-                        />
-                        <Label htmlFor={`member-${member.id}`}>
-                          {member.name}
-                        </Label>
+                {!assignToAll && (
+                  <div className="border rounded-md p-4 max-h-[200px] overflow-y-auto">
+                    {members.length === 0 ? (
+                      <div className="text-center text-muted-foreground py-2">
+                        No members available
                       </div>
-                    ))}
+                    ) : (
+                      <div className="space-y-2">
+                        {members.map(member => (
+                          <div key={member.id} className="flex items-center space-x-2">
+                            <input
+                              type="checkbox"
+                              id={`member-${member.id}`}
+                              name="memberIds"
+                              value={member.id}
+                              className="h-4 w-4 rounded border-gray-300"
+                            />
+                            <Label htmlFor={`member-${member.id}`}>
+                              {member.name}
+                            </Label>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 )}
 
-                <Button type="submit" className="w-full" disabled={isLoading}>
+                <Button 
+                  type="submit" 
+                  className="w-full bg-[#2B8A3E] hover:bg-[#2B8A3E]/90 text-white" 
+                  disabled={isLoading}
+                >
                   {isLoading ? 'Adding...' : 'Add Fee'}
                 </Button>
               </form>

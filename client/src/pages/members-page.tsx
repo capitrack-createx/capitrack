@@ -162,7 +162,11 @@ export function MembersPage() {
                     />
                   </div>
                   <div className="flex justify-center w-full">
-                    <Button disabled={isLoading} type="submit">
+                    <Button 
+                      disabled={isLoading} 
+                      type="submit"
+                      className="w-full bg-[#2B8A3E] hover:bg-[#2B8A3E]/90 text-white"
+                    >
                       {isLoading ? (
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                       ) : (
