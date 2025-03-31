@@ -68,87 +68,125 @@ export function MembersPage() {
   return (
     <div className="container mx-auto py-6">
       <div className="flex flex-col gap-6">
-        <div>
-          <h1 className="text-2xl font-bold">Team Members</h1>
+        <div className="text-left">
+          <h1 className="text-2xl font-bold">Members</h1>
           <p className="text-muted-foreground">Manage your team members</p>
         </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Add New Member</CardTitle>
-            <CardDescription>
-              Add a new member to your organization
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Form {...form}>
-              <form
-                onSubmit={form.handleSubmit(onSubmit)}
-                className="space-y-4"
-              >
-                <div className="grid gap-4 md:grid-cols-2">
-                  <FormField
-                    control={form.control}
-                    name="name"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Name</FormLabel>
-                        <FormControl>
-                          <Input placeholder="John Doe" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="email"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Email</FormLabel>
-                        <FormControl>
-                          <Input
-                            type="email"
-                            placeholder="john@example.com"
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-                <div className="flex justify-end">
-                  <Button disabled={isLoading} type="submit">
-                    {isLoading ? (
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    ) : (
-                      <Plus className="mr-2 h-4 w-4" />
-                    )}
-                    Add Member
-                  </Button>
-                </div>
-              </form>
-            </Form>
-          </CardContent>
-        </Card>
+        <div className="flex gap-6">
+          {/* Member List Section */}
+          <div className="flex-1">
+            <div className="text-left mb-4">
+              <h2 className="text-lg font-semibold">Member List</h2>
+            </div>
+            <div className="rounded-md border">
+              <div className="grid grid-cols-5 gap-4 p-4 bg-muted/50 font-medium">
+                <div>Name</div>
+                <div>Email</div>
+                <div>Phone</div>
+                <div>Join Date</div>
+                <div>Status</div>
+              </div>
+              <div className="divide-y">
+                {members.map((member) => (
+                  <div key={member.id} className="grid grid-cols-5 gap-4 p-4 items-center hover:bg-muted/50">
+                    <div>{member.name}</div>
+                    <div>{member.email}</div>
+                    <div>{member.phoneNumber || '-'}</div>
+                    <div>{new Date(member.createdAt || '').toLocaleDateString() || '-'}</div>
+                    <div>
+                      <span className="inline-flex items-center rounded-full px-2 py-1 text-xs font-medium bg-green-50 text-green-700 ring-1 ring-inset ring-green-600/20">
+                        Active
+                      </span>
+                    </div>
+                  </div>
+                ))}
+                {members.length === 0 && (
+                  <div className="p-4 text-center text-muted-foreground">
+                    No members found
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
 
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {members.map((member) => (
-            <Card key={member.id}>
-              <CardHeader>
-                <CardTitle>{member.name}</CardTitle>
-                <CardDescription>{member.email}</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-center">
-                  <span className="capitalize text-muted-foreground">
-                    {member.role}
-                  </span>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+          {/* Add Member Card */}
+          <Card className="w-[400px]">
+            <CardHeader>
+              <CardTitle>Add New Member</CardTitle>
+              <CardDescription>
+                Add a new member to your organization
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Form {...form}>
+                <form
+                  onSubmit={form.handleSubmit(onSubmit)}
+                  className="space-y-4 flex flex-col items-center"
+                >
+                  <div className="w-full space-y-4">
+                    <FormField
+                      control={form.control}
+                      name="name"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Name</FormLabel>
+                          <FormControl>
+                            <Input placeholder="John Doe" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="email"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Email</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="email"
+                              placeholder="john@example.com"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="phoneNumber"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Phone Number</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="tel"
+                              placeholder="(123) 456-7890"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                  <div className="flex justify-center w-full">
+                    <Button disabled={isLoading} type="submit">
+                      {isLoading ? (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      ) : (
+                        <Plus className="mr-2 h-4 w-4" />
+                      )}
+                      Add Member
+                    </Button>
+                  </div>
+                </form>
+              </Form>
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>
