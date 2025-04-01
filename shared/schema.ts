@@ -12,6 +12,7 @@ export const InsertUserSchema = z.object({
     isValidPhoneNumber,
     { message: "Invalid phone number, include extension +1"}
   ).transform((value) => parsePhoneNumberWithError(value).number.toString()).optional().or(z.literal('')),
+  organizationName: z.string().min(2, { message: "Organization name must be at least 2 characters." }),
 });
 
 
@@ -23,14 +24,6 @@ export const UserSchema = z.object({
 
 
 export const RoleEnum = z.enum(["owner", "admin", "member"]);
-// export const OrganizationSchema = z.object({
-//   uid: z.string().optional(),
-//   name: z.string().min(2, { message: "Name must be at least 2 characters." }).optional(),
-//   logoURL: z.string().optional(),
-//   description: z.string().min(2, { message: "Description must be at least 2 characters." }),
-//   createdAt: z.date().optional(),
-//   roles: z.record(RoleEnum).optional(),
-// });
 
 export const OrganizationSchema = z.object({
   uid: z.string().optional(),
@@ -42,11 +35,34 @@ export const OrganizationSchema = z.object({
 });
 
 
+export const FeeSchema = z.object({
+  id: z.string().optional(),
+  name: z.string().min(2, { message: "Fee name must be at least 2 characters." }),
+  amount: z.number().min(0, { message: "Amount must be greater than 0" }),
+  dueDate: z.date(),
+  memberIds: z.array(z.string()),
+  orgId: z.string()
+});
 
+export const PaymentMethodEnum = z.enum([
+  'CASH',
+  'CHECK',
+  'VENMO',
+  'ZELLE',
+  'CREDIT_CARD',
+  'OTHER'
+]);
 
-export type Organization = z.infer<typeof OrganizationSchema>
-export type InsertUser = z.infer<typeof InsertUserSchema>;
-export type Role = z.infer<typeof RoleEnum>;
+export const FeeAssignmentSchema = z.object({
+  id: z.string().optional(),
+  feeId: z.string(),
+  memberId: z.string(),
+  isPaid: z.boolean(),
+  paidDate: z.date().optional(),
+  paymentMethod: PaymentMethodEnum.optional(),
+  notes: z.string().optional()
+});
+
 export const TransactionSchema = z.object({
   type: z.enum(["Income", "Expense"]),
   amount: z.string()
@@ -58,4 +74,11 @@ export const TransactionSchema = z.object({
   date: z.string().optional().default(() => new Date().toISOString().split('T')[0]),
 });
 
+export type Organization = z.infer<typeof OrganizationSchema>
+export type InsertUser = z.infer<typeof InsertUserSchema>;
+export type Role = z.infer<typeof RoleEnum>;
 export type Transaction = z.infer<typeof TransactionSchema>;
+export type User = z.infer<typeof UserSchema>;
+export type Fee = z.infer<typeof FeeSchema>;
+export type PaymentMethod = z.infer<typeof PaymentMethodEnum>;
+export type FeeAssignment = z.infer<typeof FeeAssignmentSchema>;
