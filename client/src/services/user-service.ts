@@ -23,3 +23,7 @@ export const createUserDocument = async (
       }
     }
   };
+
+// export const createOrgDocument = async (org: InsertOrg) {
+
+// }

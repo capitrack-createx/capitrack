@@ -30,7 +30,7 @@ export function LoginForm({
     await login(email, password)
       .then((user) => {
         if (user) {
-          setLocation("/dashboard");
+          setLocation("/app");
         }
       })
       .catch((error) => {

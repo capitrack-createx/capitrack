@@ -15,6 +15,7 @@ import { InsertUser, InsertUserSchema } from "@shared/schema";
 import { signUp } from "@/services/auth-service";
 import { useLocation } from "wouter";
 import { createUserDocument } from "@/services/user-service";
+import { dbService } from "@/services/db-service";
 import { useState } from "react";
 import { Loader2 } from "lucide-react";
 
@@ -31,28 +32,45 @@ export function SignUpForm({
 
   const onSubmit = async (data: InsertUser) => {
     setIsLoading(true);
-    // 1. Create user in FirebaseAuth
     signUp(data)
       .then((user) => {
-        // 2. Create user document (insert in DB).
         createUserDocument(data, user.uid)
-          .then(() => {
-            // 3. Redirect to dashboard page
-            if (user) {
-              setLocation("/dashboard");
+          .then(async () => {
+            try {
+              const org = await dbService.createOrganization({
+                name: data.organizationName,
+                ownerId: user.uid,
+                createdAt: new Date(),
+              });
+              // Add user as admin member
+              await dbService.addMember({
+                name: data.name,
+                email: data.email,
+                orgId: org.id,
+                role: 'ADMIN'
+              });
+              // 4. Redirect to dashboard page
+              if (user) {
+                setLocation("/app");
+              }
+            } catch (orgError) {
+              console.log("Error creating organization", orgError);
+              setIsLoading(false);
+              user.delete();
             }
           })
           .catch((dbError) => {
             console.log("Error creating user document", dbError);
-            // On failure, undo step 2 (rollback)
+
+            setIsLoading(false);
             user.delete();
           });
       })
       .catch((authError) => {
         console.log("Error creating user:", authError);
+        setIsLoading(false);
         // TODO: Toast sign up error
-      })
-      .finally(() => setIsLoading(false));
+      });
   };
 
   return (
@@ -75,7 +93,7 @@ export function SignUpForm({
             name="name"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Full Name</FormLabel>
+                <FormLabel>Name</FormLabel>
                 <FormControl>
                   <Input {...field} placeholder="George Burdell" />
                 </FormControl>
@@ -127,6 +145,22 @@ export function SignUpForm({
                   <FormLabel>Phone Number</FormLabel>
                   <FormControl>
                     <Input {...field} placeholder="(123) 456-7890" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+
+          <div className="grid gap-3">
+            <FormField
+              control={form.control}
+              name="organizationName"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Organization Name</FormLabel>
+                  <FormControl>
+                    <Input {...field} placeholder="Organization Name" required />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
