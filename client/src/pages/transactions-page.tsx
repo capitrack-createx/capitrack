@@ -18,17 +18,8 @@ import { Input } from "../components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select"
 import { Button } from "../components/ui/button"
 import { Separator } from "../components/ui/separator"
-import { TransactionSchema } from '@shared/schema'
+import { TransactionSchema, Transaction } from '@shared/schema'
 import { z } from "zod";
-
-interface Transaction {
-    id: string | number;
-    date: string;
-    type: "Income" | "Expense";
-    category: string;
-    description: string;
-    amount: number;
-  }
   
 interface NewTransaction {
     type: "Income" | "Expense";
