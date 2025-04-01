@@ -17,6 +17,7 @@ export const InsertUserSchema = z.object({
 export type InsertUser = z.infer<typeof InsertUserSchema>;
 
 export const TransactionSchema = z.object({
+  id: z.string(),
   type: z.enum(["Income", "Expense"]),
   amount: z.string()
     .min(1, { message: "Amount is required" })

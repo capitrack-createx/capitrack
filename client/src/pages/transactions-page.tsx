@@ -57,7 +57,7 @@ export default function TransactionsPage() {
         type: validatedData.type,
         category: validatedData.category,
         description: validatedData.description || "",
-        amount: parseFloat(validatedData.amount)
+        amount: validatedData.amount
       };
       
       setTransactions([...transactions, newTransactionRecord]);
