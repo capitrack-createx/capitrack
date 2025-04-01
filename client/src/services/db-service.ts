@@ -1,6 +1,6 @@
 import { collection, addDoc, getDocs, query, where, doc, getDoc, Timestamp, updateDoc } from 'firebase/firestore';
 import { db } from '../firebase';
-import type { Member, Organization, Fee, FeeAssignment, PaymentMethod } from '../types';
+import type { Member, Organization, Fee, FeeAssignment, PaymentMethod } from '../../../shared/types';
 
 const convertTimestampToDate = (data: any): Date => {
   return (data.dueDate || data.paidDate || data.createdAt).toDate();

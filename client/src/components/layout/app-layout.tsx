@@ -5,28 +5,26 @@ import {
 } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/layout/app-sidebar";
 import { useEffect, useState } from "react";
-import { Organization, OrganizationSchema, Role } from "@shared/schema";
 import { Separator } from "@/components/ui/separator";
+import { useAuth } from "@/services/auth-service";
+import { Organization } from "@shared/types";
+import { dbService } from "@/services/db-service";
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
-  const sampleOrganization = {
-    uid: "123e4567-e89b-12d3-a456-426614174000",
-    name: "Acme Corporation",
-    description: "Leading provider of widgets and gizmos.",
-    createdAt: new Date(),
-    roles: {
-      "user-uuid-1": "owner" as Role,
-      "user-uuid-2": "admin" as Role,
-      "user-uuid-3": "member" as Role,
-    },
-  };
-  const org: Organization = OrganizationSchema.parse(sampleOrganization);
+  const { user } = useAuth();
 
   const [userOrgs, setUserOrgs] = useState<Organization[]>([]);
+
+  async function loadOrgs() {
+    if (!user) return;
+    const org = await dbService.getUserOrganization(user.uid);
+    if (org) {
+      setUserOrgs([org]);
+    }
+  }
   useEffect(() => {
-    // TODO: Fetch userOrgs
-    setUserOrgs([org]);
-  }, [org]);
+    loadOrgs();
+  }, []);
 
   return (
     <SidebarProvider>

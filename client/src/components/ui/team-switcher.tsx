@@ -16,7 +16,7 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 
-import { Organization } from "@shared/schema";
+import { Organization } from "@shared/types";
 import { useEffect } from "react";
 import React from "react";
 
@@ -71,12 +71,12 @@ export function TeamSwitcher({ teams }: { teams: Organization[] }) {
               <></>
             )}
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="gap-2 p-2">
+            {/* <DropdownMenuItem className="gap-2 p-2">
               <div className="flex size-6 items-center justify-center rounded-md border bg-background">
                 <Plus className="size-4" />
               </div>
               <div className="font-medium text-muted-foreground">New Org</div>
-            </DropdownMenuItem>
+            </DropdownMenuItem> */}
           </DropdownMenuContent>
         </DropdownMenu>
       </SidebarMenuItem>

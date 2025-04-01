@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/sidebar";
 import { Link } from "wouter";
 import { TeamSwitcher } from "@/components/ui/team-switcher";
-import { Organization } from "@shared/schema";
+import { Organization } from "@shared/types";
 
 // Menu items.
 const items = [

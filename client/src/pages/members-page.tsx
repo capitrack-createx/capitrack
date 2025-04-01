@@ -18,7 +18,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Member } from "../types";
+import { Member } from "../../../shared/types";
 import { dbService } from "@/services/db-service";
 import { useAuth } from "@/services/auth-service";
 
@@ -27,9 +27,9 @@ export function MembersPage() {
   const [members, setMembers] = useState<Member[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
-  const form = useForm<Omit<Member, 'id'>>({
+  const form = useForm<Omit<Member, "id">>({
     defaultValues: {
-      role: 'MEMBER',
+      role: "MEMBER",
     },
   });
 
@@ -46,7 +46,7 @@ export function MembersPage() {
     loadMembers();
   }, [user]);
 
-  const onSubmit = async (data: Omit<Member, 'id'>) => {
+  const onSubmit = async (data: Omit<Member, "id">) => {
     if (!user) return;
     setIsLoading(true);
     try {
