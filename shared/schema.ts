@@ -22,7 +22,7 @@ export const UserSchema = z.object({
 });
 
 
-const RoleEnum = z.enum(["owner", "admin", "member"]);
+export const RoleEnum = z.enum(["owner", "admin", "member"]);
 // export const OrganizationSchema = z.object({
 //   uid: z.string().optional(),
 //   name: z.string().min(2, { message: "Name must be at least 2 characters." }).optional(),
@@ -46,4 +46,16 @@ export const OrganizationSchema = z.object({
 
 export type Organization = z.infer<typeof OrganizationSchema>
 export type InsertUser = z.infer<typeof InsertUserSchema>;
-export type User = z.infer<typeof UserSchema>;
+export type Role = z.infer<typeof RoleEnum>;
+export const TransactionSchema = z.object({
+  type: z.enum(["Income", "Expense"]),
+  amount: z.string()
+    .min(1, { message: "Amount is required" })
+    .refine(val => !isNaN(parseFloat(val)), { message: "Amount must be a number" })
+    .transform(val => parseFloat(val)), // Add this transform
+  category: z.string().min(1, { message: "Category is required" }),
+  description: z.string().optional(),
+  date: z.string().optional().default(() => new Date().toISOString().split('T')[0]),
+});
+
+export type Transaction = z.infer<typeof TransactionSchema>;
