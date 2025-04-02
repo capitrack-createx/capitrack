@@ -1,4 +1,3 @@
-
 export interface Organization {
   id: string;
   name: string;
@@ -11,6 +10,8 @@ export interface Member {
     email: string;
     orgId: string; // reference to the organization
     role: 'ADMIN' | 'MEMBER';
+    phoneNumber?: string;
+    createdAt?: Date;
   }
   export interface Fee {
     id: string;
