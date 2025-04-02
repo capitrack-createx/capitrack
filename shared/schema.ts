@@ -45,20 +45,27 @@ export const FeeAssignmentSchema = z.object({
   notes: z.string().optional()
 });
 
-export const TransactionSchema = z.object({
+
+export const InsertTransactionSchema = z.object({
+  id: z.string().optional(),
   type: z.enum(["Income", "Expense"]),
-  amount: z.string()
-    .min(1, { message: "Amount is required" })
-    .refine(val => !isNaN(parseFloat(val)), { message: "Amount must be a number" })
-    .transform(val => parseFloat(val)), // Add this transform
+  amount: z.preprocess((val) => {
+    if (typeof val === "string") {
+      return parseFloat(val);
+    }
+    return val;
+  }, z.number().min(1, { message: "Amount is required" })),
   category: z.string().min(1, { message: "Category is required" }),
   description: z.string().optional(),
   date: z.string().optional().default(() => new Date().toISOString().split('T')[0]),
-});
+  createdAt: z.date().default(() => new Date()),
+  createdBy: z.string(), // Firebase UUID of authenticated users
+  orgId: z.string() // UUID of Organization
+})
 
 export type InsertUser = z.infer<typeof InsertUserSchema>;
 export type Role = z.infer<typeof RoleEnum>;
-export type Transaction = z.infer<typeof TransactionSchema>;
+export type InsertTransaction = z.infer<typeof InsertTransactionSchema>;
 export type Fee = z.infer<typeof FeeSchema>;
 export type PaymentMethod = z.infer<typeof PaymentMethodEnum>;
 export type FeeAssignment = z.infer<typeof FeeAssignmentSchema>;

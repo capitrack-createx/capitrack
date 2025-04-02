@@ -33,3 +33,20 @@ export interface FeeAssignment {
     paymentMethod?: PaymentMethod;
     notes?: string;
   } 
+
+  export interface Organization {
+    id: string,
+    name: string,
+  }
+
+  export interface Transaction {
+    id: string,
+    type: string,
+    amount: number, 
+    category: string,
+    description?: string,
+    date: Date,
+    createdAt: Date,
+    createdBy: Date, // Firebase UUID of authenticated users
+    orgId: string // UUID of Organization
+  }

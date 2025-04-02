@@ -1,92 +1,101 @@
-import React, { useState } from "react";
+import React, { useEffect } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import {
+  Form,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormControl,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
 import {
   Table,
   TableBody,
-  TableCaption,
   TableCell,
   TableHead,
   TableHeader,
   TableRow,
-} from "../components/ui/table";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "../components/ui/card";
-import { Input } from "../components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "../components/ui/select";
-import { Button } from "../components/ui/button";
-import { TransactionSchema, Transaction } from "@shared/schema";
-import { z } from "zod";
-
-interface NewTransaction {
-  type: "Income" | "Expense";
-  amount: string;
-  category: string;
-  description: string;
-}
+} from "@/components/ui/table";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { InsertTransaction, InsertTransactionSchema } from "@shared/schema";
+import { useAuth } from "@/services/auth-service";
+import { useOrganization } from "@/context/OrganizationContext";
+import { dbService } from "@/services/db-service";
+import { Transaction } from "@shared/types";
 
 export const TransactionsPage = () => {
-  const [filter, setFilter] = useState("All");
+  const { user } = useAuth();
+  const { organization } = useOrganization();
+  const [transactions, setTransactions] = React.useState<Transaction[]>([]);
 
-  const [newTransaction, setNewTransaction] = useState({
-    type: "Expense",
-    amount: "",
-    category: "Other",
-    description: "",
+  useEffect(() => {
+    if (!user || !organization) return;
+    const unsubscribe = dbService.subscribeToTransactions(
+      organization.id,
+      (snapshot) => {
+        setTransactions(snapshot);
+      }
+    );
+    return unsubscribe;
+  }, [organization, user]);
+
+  // Initialize the form with default values and validation schema
+  const form = useForm<InsertTransaction>({
+    resolver: zodResolver(InsertTransactionSchema),
+    defaultValues: {
+      type: "Expense",
+      amount: 0,
+      category: "Other",
+      description: "",
+      createdBy: user!.uid,
+      createdAt: new Date(),
+      orgId: organization!.id,
+    },
   });
 
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
-
-  const handleInputChange = (field: keyof NewTransaction, value: string) => {
-    setNewTransaction({
-      ...newTransaction,
-      [field]: value,
-    });
-  };
-
-  const handleAddTransaction = () => {
-    try {
-      const validatedData = TransactionSchema.parse(newTransaction);
-
-      const newTransactionRecord: Transaction = {
-        id: crypto.randomUUID(),
-        date: validatedData.date || new Date().toISOString().split("T")[0],
-        type: validatedData.type,
-        category: validatedData.category,
-        description: validatedData.description || "",
-        amount: parseFloat(validatedData.amount),
-      };
-
-      setTransactions([...transactions, newTransactionRecord]);
-
-      setNewTransaction({
-        type: "Expense",
-        amount: "",
-        category: "Other",
-        description: "",
-      });
-
-      console.log("Adding validated transaction:", validatedData);
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        console.error("Validation errors:", error.errors);
-      } else {
-        console.error("An unexpected error occurred:", error);
-      }
+  // onSubmit will be called with validated form data
+  const onSubmit = (data: InsertTransaction) => {
+    if (!user || !organization) {
+      return;
     }
+    const newTransactionRecord: InsertTransaction = {
+      date: data.date || new Date().toISOString().split("T")[0],
+      type: data.type,
+      category: data.category,
+      description: data.description || "",
+      amount: data.amount,
+      createdBy: user.uid,
+      createdAt: new Date(),
+      orgId: organization.id,
+    };
+
+    console.log(newTransactionRecord);
+    // Reset the form after a successful submission
+    dbService
+      .createTransactionDocument(newTransactionRecord)
+      .then(() => {
+        form.reset();
+      })
+      .catch((error) => {
+        console.log("Error creating transaction:", error);
+      });
   };
 
   return (
     <div className="p-6 max-w-7xl mx-auto">
-      <h1 className="text-3xl font-bold text-green-700 mb-2">GT-SHPE</h1>
+      <h1 className="text-3xl font-bold text-green-700 mb-2">
+        {organization?.name}
+      </h1>
       <h2 className="text-2xl font-semibold mb-6">Transactions</h2>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -94,7 +103,8 @@ export const TransactionsPage = () => {
         <div className="md:col-span-2">
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-xl font-medium">Transaction History</h3>
-            <Select value={filter} onValueChange={setFilter}>
+            {/* Filter component remains unchanged */}
+            <Select value="All" onValueChange={() => {}}>
               <SelectTrigger className="w-24">
                 <SelectValue />
               </SelectTrigger>
@@ -126,7 +136,7 @@ export const TransactionsPage = () => {
               ) : (
                 transactions.map((transaction, index) => (
                   <TableRow key={index}>
-                    <TableCell>{transaction.date}</TableCell>
+                    <TableCell>{transaction.date.toString()}</TableCell>
                     <TableCell>{transaction.type}</TableCell>
                     <TableCell>{transaction.category}</TableCell>
                     <TableCell>{transaction.description}</TableCell>
@@ -153,73 +163,108 @@ export const TransactionsPage = () => {
               <CardTitle>Add Transaction</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium mb-1">Type</label>
-                <Select
-                  value={newTransaction.type}
-                  onValueChange={(value) => handleInputChange("type", value)}
+              <Form {...form}>
+                <form
+                  className="space-y-4"
+                  onSubmit={form.handleSubmit(onSubmit)}
                 >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Expense">Expense</SelectItem>
-                    <SelectItem value="Income">Income</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+                  {/* Transaction Type Field */}
+                  <FormField
+                    control={form.control}
+                    name="type"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Type</FormLabel>
+                        <FormControl>
+                          <Select
+                            value={field.value}
+                            onValueChange={field.onChange}
+                          >
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="Expense">Expense</SelectItem>
+                              <SelectItem value="Income">Income</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-              <div>
-                <label className="block text-sm font-medium mb-1">Amount</label>
-                <Input
-                  type="number"
-                  placeholder="0"
-                  value={newTransaction.amount}
-                  onChange={(e) => handleInputChange("amount", e.target.value)}
-                />
-              </div>
+                  {/* Amount Field */}
+                  <FormField
+                    control={form.control}
+                    name="amount"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Amount</FormLabel>
+                        <FormControl>
+                          <Input {...field} type="number" placeholder="0" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-              <div>
-                <label className="block text-sm font-medium mb-1">
-                  Category
-                </label>
-                <Select
-                  value={newTransaction.category}
-                  onValueChange={(value) =>
-                    handleInputChange("category", value)
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Other">Other</SelectItem>
-                    <SelectItem value="Event">Event</SelectItem>
-                    <SelectItem value="Supplies">Supplies</SelectItem>
-                    <SelectItem value="Membership">Membership</SelectItem>
-                    <SelectItem value="Sponsorship">Sponsorship</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+                  {/* Category Field */}
+                  <FormField
+                    control={form.control}
+                    name="category"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Category</FormLabel>
+                        <FormControl>
+                          <Select
+                            value={field.value}
+                            onValueChange={field.onChange}
+                          >
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="Other">Other</SelectItem>
+                              <SelectItem value="Event">Event</SelectItem>
+                              <SelectItem value="Supplies">Supplies</SelectItem>
+                              <SelectItem value="Membership">
+                                Membership
+                              </SelectItem>
+                              <SelectItem value="Sponsorship">
+                                Sponsorship
+                              </SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-              <div>
-                <label className="block text-sm font-medium mb-1">
-                  Description
-                </label>
-                <Input
-                  value={newTransaction.description}
-                  onChange={(e) =>
-                    handleInputChange("description", e.target.value)
-                  }
-                />
-              </div>
+                  {/* Description Field */}
+                  <FormField
+                    control={form.control}
+                    name="description"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Description</FormLabel>
+                        <FormControl>
+                          <Input {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-              <Button
-                className="w-full bg-green-700 hover:bg-green-800"
-                onClick={handleAddTransaction}
-              >
-                Add Transaction
-              </Button>
+                  <Button
+                    type="submit"
+                    className="w-full bg-green-700 hover:bg-green-800"
+                  >
+                    Add Transaction
+                  </Button>
+                </form>
+              </Form>
             </CardContent>
           </Card>
         </div>

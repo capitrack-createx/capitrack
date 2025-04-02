@@ -1,6 +1,7 @@
-import { collection, addDoc, getDocs, query, where, doc, getDoc, Timestamp, updateDoc } from 'firebase/firestore';
+import { collection, addDoc, getDocs, query, where, doc, getDoc, Timestamp, updateDoc, onSnapshot } from 'firebase/firestore';
 import { db } from '../firebase';
-import type { Member, Organization, Fee, FeeAssignment, PaymentMethod } from '../../../shared/types';
+import type { Member, Organization, Fee, FeeAssignment, Transaction } from '@shared/types';
+import { InsertTransaction } from '@shared/schema';
 
 const convertTimestampToDate = (data: any): Date => {
   return (data.dueDate || data.paidDate || data.createdAt).toDate();
@@ -222,4 +223,41 @@ export const dbService = {
       throw new Error('Failed to update fee assignment');
     }
   },
+
+  // Transaction
+  async createTransactionDocument (
+    data: InsertTransaction
+  ): Promise<void> {
+    try {
+      await addDoc(collection(db, 'transactions'), {
+
+        ...data
+      });
+
+    } catch(error) {
+      console.error('Error creating transaction:', error);
+      throw new Error('Failed to create transaction');    
+    }
+  },
+
+  subscribeToTransactions(
+    orgId: string,
+    callback: (transactions: Transaction[]) => void
+  ) {
+    const q = query(
+      collection(db, "transactions"),
+      where("orgId", "==", orgId)
+    );
+    
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const transactions: Transaction[] = [];
+      snapshot.forEach((doc) => {
+        transactions.push({ id: doc.id, ...doc.data() } as Transaction);
+      });
+      callback(transactions);
+    });
+    
+    // Return the unsubscribe function for cleanup
+    return unsubscribe;
+  },  
 };

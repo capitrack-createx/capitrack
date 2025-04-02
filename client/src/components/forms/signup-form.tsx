@@ -47,7 +47,7 @@ export function SignUpForm({
                 name: data.name,
                 email: data.email,
                 orgId: org.id,
-                role: 'ADMIN'
+                role: "ADMIN",
               });
               // 4. Redirect to dashboard page
               if (user) {
@@ -160,7 +160,11 @@ export function SignUpForm({
                 <FormItem>
                   <FormLabel>Organization Name</FormLabel>
                   <FormControl>
-                    <Input {...field} placeholder="Organization Name" required />
+                    <Input
+                      {...field}
+                      placeholder="Organization Name"
+                      required
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

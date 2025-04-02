@@ -19,7 +19,6 @@ import {
 } from "@/components/ui/sidebar";
 import { Link } from "wouter";
 import { TeamSwitcher } from "@/components/ui/team-switcher";
-import { Organization } from "@shared/types";
 
 // Menu items.
 const items = [
@@ -55,15 +54,11 @@ const items = [
   },
 ];
 
-type AppSidebarProps = {
-  organizations: Organization[];
-};
-
-export function AppSidebar({ organizations }: AppSidebarProps) {
+export function AppSidebar() {
   return (
     <Sidebar variant="sidebar" side="left" collapsible="icon">
       <SidebarHeader>
-        <TeamSwitcher teams={organizations} />
+        <TeamSwitcher />
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>

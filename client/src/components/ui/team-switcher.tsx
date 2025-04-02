@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronDown, Plus } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 
 import {
   DropdownMenu,
@@ -19,14 +19,20 @@ import {
 import { Organization } from "@shared/types";
 import { useEffect } from "react";
 import React from "react";
+import { useOrganization } from "@/context/OrganizationContext";
 
-export function TeamSwitcher({ teams }: { teams: Organization[] }) {
-  const [activeTeam, setActiveTeam] = React.useState<Organization>(teams[0]);
+export function TeamSwitcher() {
+  const { organization } = useOrganization();
+
+  const [activeTeam, setActiveTeam] = React.useState<Organization>();
+  const [teams, setTeams] = React.useState<Organization[]>();
+
   useEffect(() => {
-    if (teams.length > 0) {
-      setActiveTeam(teams[0]);
+    if (organization) {
+      setActiveTeam(organization);
+      setTeams([organization]);
     }
-  }, [teams]);
+  }, [organization]);
 
   return (
     <SidebarMenu>
@@ -55,7 +61,7 @@ export function TeamSwitcher({ teams }: { teams: Organization[] }) {
               Your Orgs
             </DropdownMenuLabel>
             {teams && teams.length > 0 ? (
-              teams.map((team, index) => (
+              teams.map((team) => (
                 <DropdownMenuItem
                   key={team.name}
                   onClick={() => setActiveTeam(team)}
