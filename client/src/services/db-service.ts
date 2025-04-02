@@ -1,20 +1,39 @@
-import { collection, addDoc, getDocs, query, where, doc, getDoc, Timestamp, updateDoc, onSnapshot } from 'firebase/firestore';
+import { collection, addDoc, getDocs, query, where, doc, getDoc, Timestamp, updateDoc, onSnapshot, and } from 'firebase/firestore';
 import { db } from '../firebase';
 import type { Member, Organization, Fee, FeeAssignment, Transaction } from '@shared/types';
-import { InsertTransaction } from '@shared/schema';
+import { InsertMember, InsertTransaction } from '@shared/schema';
 
 const convertTimestampToDate = (data: any): Date => {
   return (data.dueDate || data.paidDate || data.createdAt).toDate();
 };
 
+export class ValidationError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "ValidationError";
+  }
+}
+
 export const dbService = {
   // Members
-  async addMember(data: Omit<Member, 'id'>): Promise<Member> {
+  async addMember(data: InsertMember): Promise<void> {
     try {
-      const docRef = await addDoc(collection(db, 'members'), data);
-      return { ...data, id: docRef.id };
+      // Check duplicate first
+      const q = query(
+        collection(db, 'members'),
+        where('orgId', '==', data.orgId),
+        where('email', '==', data.email)
+      );
+      const snapshot = await getDocs(q);
+      if (snapshot.size > 0) {
+        throw new ValidationError('Duplicate Member (email)')
+      }
+      await addDoc(collection(db, 'members'), data);
     } catch (error) {
       console.error('Error adding member:', error);
+      if (error instanceof ValidationError) {
+        throw error;
+      }
       throw new Error('Failed to add member');
     }
   },

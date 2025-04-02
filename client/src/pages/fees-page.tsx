@@ -93,6 +93,7 @@ export const FeesPage = () => {
 
   async function loadFeeAssignments(feeId: string) {
     const assignmentsData = await dbService.getFeeAssignments(feeId);
+    console.log(assignmentsData);
     setAssignments((prev) => ({
       ...prev,
       [feeId]: assignmentsData,
@@ -159,7 +160,7 @@ export const FeesPage = () => {
   }
 
   // Component-specific styles that extend shared styles
-  // const componentStyles = {
+  // const componentStyles = {np
   //   memberList: {
   //     maxHeight: "200px",
   //     overflowY: "auto" as const,

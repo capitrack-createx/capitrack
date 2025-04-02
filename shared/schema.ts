@@ -63,6 +63,20 @@ export const InsertTransactionSchema = z.object({
   orgId: z.string() // UUID of Organization
 })
 
+
+export const InsertMemberSchema = z.object({
+  name: z.string().min(2),
+  email: z.string().email(),
+  orgId: z.string().min(5), // reference to the organization
+  role: z.enum(['ADMIN', 'MEMBER']),
+  phoneNumber: z.string().refine(
+    isValidPhoneNumber,
+    { message: "Invalid phone number, include extension +1"}
+  ).transform((value) => parsePhoneNumberWithError(value).number.toString()).optional().or(z.literal('')),
+  createdAt: z.date(),
+})
+
+export type InsertMember = z.infer<typeof InsertMemberSchema>;
 export type InsertUser = z.infer<typeof InsertUserSchema>;
 export type Role = z.infer<typeof RoleEnum>;
 export type InsertTransaction = z.infer<typeof InsertTransactionSchema>;

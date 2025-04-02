@@ -21,47 +21,53 @@ import {
 import { Member } from "@shared/types";
 import { dbService } from "@/services/db-service";
 import { useAuth } from "@/services/auth-service";
+import { useOrganization } from "@/context/OrganizationContext";
+import { InsertMember, InsertMemberSchema } from "@shared/schema";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { toast } from "sonner";
 
 export function MembersPage() {
   const [members, setMembers] = useState<Member[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const { user } = useAuth();
+  const { organization } = useOrganization();
 
-  const form = useForm<Omit<Member, "id">>({
+  const form = useForm<InsertMember>({
+    resolver: zodResolver(InsertMemberSchema),
     defaultValues: {
+      email: "",
+      phoneNumber: "",
       role: "MEMBER",
+      name: "",
+      orgId: organization!.id,
+      createdAt: new Date(),
     },
   });
 
   const loadMembers = async () => {
-    if (!user) return;
-    const org = await dbService.getUserOrganization(user.uid);
-    if (org) {
-      const membersList = await dbService.getMembers(org.id);
-      setMembers(membersList);
-    }
+    if (!user || !organization) return;
+    const membersList = await dbService.getMembers(organization.id);
+    setMembers(membersList);
   };
 
   useEffect(() => {
     loadMembers();
   }, [user]);
 
-  const onSubmit = async (data: Omit<Member, "id">) => {
-    if (!user) return;
+  const onSubmit = async (data: InsertMember) => {
+    if (!user || !organization) return;
     setIsLoading(true);
     try {
       // Create a new member with a temporary ID
-      const newMember: Member = {
-        ...data,
-        id: Date.now().toString(), // Using timestamp as temporary ID
-        orgId: "temp-org-id",
-        createdAt: new Date(),
-        role: "MEMBER",
-      };
-
-      // Add to local state
-      setMembers((prevMembers) => [...prevMembers, newMember]);
-      form.reset();
+      dbService
+        .addMember(data)
+        .then(() => {
+          form.reset();
+          loadMembers();
+        })
+        .catch((error: Error) => {
+          toast.error(error.message);
+        });
     } catch (error) {
       console.error("Error adding member:", error);
     }
@@ -104,7 +110,10 @@ export function MembersPage() {
                       </div>
                       <div>
                         {member.createdAt
-                          ? new Date(member.createdAt).toLocaleDateString()
+                          ? member.createdAt
+                              .toDate()
+                              .toISOString()
+                              .split("T")[0]
                           : "-"}
                       </div>
                       <div>

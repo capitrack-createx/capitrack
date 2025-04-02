@@ -1,3 +1,4 @@
+import { Timestamp } from 'firebase/firestore';
 export interface Organization {
   id: string;
   name: string;
@@ -11,8 +12,9 @@ export interface Member {
     orgId: string; // reference to the organization
     role: 'ADMIN' | 'MEMBER';
     phoneNumber?: string;
-    createdAt?: Date;
+    createdAt?: Timestamp;
   }
+
   export interface Fee {
     id: string;
     name: string;
