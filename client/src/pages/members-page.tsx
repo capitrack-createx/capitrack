@@ -58,7 +58,6 @@ export function MembersPage() {
     if (!user || !organization) return;
     setIsLoading(true);
     try {
-      // Create a new member with a temporary ID
       dbService
         .addMember(data)
         .then(() => {

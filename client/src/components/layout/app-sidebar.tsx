@@ -22,11 +22,11 @@ import { TeamSwitcher } from "@/components/ui/team-switcher";
 
 // Menu items.
 const items = [
-  {
-    title: "Dashboard",
-    url: "/app/dashboard",
-    icon: LayoutDashboard,
-  },
+  // {
+  //   title: "Dashboard",
+  //   url: "/app/dashboard",
+  //   icon: LayoutDashboard,
+  // },
   {
     title: "Members",
     url: "/app/members",
@@ -37,16 +37,16 @@ const items = [
     url: "/app/fees",
     icon: DollarSign,
   },
-  {
-    title: "Budgets",
-    url: "/app/budgets",
-    icon: PieChart,
-  },
-  {
-    title: "Reports",
-    url: "/app/reports",
-    icon: FileText,
-  },
+  // {
+  //   title: "Budgets",
+  //   url: "/app/budgets",
+  //   icon: PieChart,
+  // },
+  // {
+  //   title: "Reports",
+  //   url: "/app/reports",
+  //   icon: FileText,
+  // },
   {
     title: "Transactions",
     url: "/app/transactions",

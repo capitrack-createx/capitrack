@@ -13,6 +13,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useOrganization } from "@/context/OrganizationContext";
 
 type Member = {
   id: string;
@@ -24,7 +25,7 @@ type Member = {
 
 export const FeesPage = () => {
   const { user } = useAuth();
-  const [orgId, setOrgId] = useState<string>("");
+  const { organization } = useOrganization();
   const [fees, setFees] = useState<Fee[]>([]);
   const [members, setMembers] = useState<Member[]>([]);
   const [assignments, setAssignments] = useState<
@@ -40,28 +41,16 @@ export const FeesPage = () => {
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    loadOrganization();
-  }, [user]);
-
-  useEffect(() => {
-    if (orgId) {
-      console.log("Organization loaded, orgId:", orgId);
+    if (organization) {
+      console.log("Organization loaded, orgId:", organization.id);
       loadFees();
       loadMembers();
     }
-  }, [orgId]);
+  }, [organization]);
 
   useEffect(() => {
     console.log("Current members state:", members);
   }, [members]);
-
-  async function loadOrganization() {
-    if (!user) return;
-    const org = await dbService.getUserOrganization(user.uid);
-    if (org?.id) {
-      setOrgId(org.id);
-    }
-  }
 
   useEffect(() => {
     if (selectedFee) {
@@ -70,14 +59,20 @@ export const FeesPage = () => {
   }, [selectedFee]);
 
   async function loadFees() {
-    const feesData = await dbService.getFees(orgId);
+    if (!user || !organization) {
+      return;
+    }
+    const feesData = await dbService.getFees(organization.id);
     setFees(feesData);
   }
 
   async function loadMembers() {
+    if (!user || !organization) {
+      return;
+    }
     try {
-      console.log("Loading members for org:", orgId);
-      const membersData = await dbService.getMembers(orgId);
+      console.log("Loading members for org:", organization.id);
+      const membersData = await dbService.getMembers(organization.id);
       console.log("Loaded members:", membersData);
       if (Array.isArray(membersData)) {
         setMembers(membersData);
@@ -93,7 +88,6 @@ export const FeesPage = () => {
 
   async function loadFeeAssignments(feeId: string) {
     const assignmentsData = await dbService.getFeeAssignments(feeId);
-    console.log(assignmentsData);
     setAssignments((prev) => ({
       ...prev,
       [feeId]: assignmentsData,
@@ -103,7 +97,6 @@ export const FeesPage = () => {
   async function handleAddFee(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setIsLoading(true);
-
     const form = e.currentTarget;
     const formData = new FormData(form);
 
@@ -113,23 +106,19 @@ export const FeesPage = () => {
     } else {
       memberIds = Array.from(formData.getAll("memberIds")).map(String);
     }
-
-    // Create a new fee with a temporary ID
-    const newFee: Fee = {
-      id: Date.now().toString(),
+    const orgId = organization!.id;
+    await dbService.addFee({
       name: formData.get("name") as string,
       amount: Number(formData.get("amount")),
       dueDate: new Date(formData.get("dueDate") as string),
       memberIds,
-      orgId: "temp-org-id",
-    };
-
-    // Add to local state
-    setFees((prevFees) => [...prevFees, newFee]);
+      orgId,
+    });
 
     form.reset();
     setAssignToAll(false);
     setIsLoading(false);
+    loadFees();
   }
 
   async function handlePayFee(assignment: FeeAssignment, fee: Fee) {
