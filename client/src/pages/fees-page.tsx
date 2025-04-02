@@ -159,44 +159,44 @@ export const FeesPage = () => {
   }
 
   // Component-specific styles that extend shared styles
-  const componentStyles = {
-    memberList: {
-      maxHeight: "200px",
-      overflowY: "auto" as const,
-      border: "1px solid #ddd",
-      borderRadius: "4px",
-      padding: "8px",
-    },
-    memberItem: {
-      display: "flex",
-      alignItems: "center",
-      marginBottom: "4px",
-    },
-    checkbox: {
-      marginRight: "8px",
-    },
-    feeList: {
-      display: "flex",
-      flexDirection: "column" as const,
-      gap: "16px",
-    },
-    feeCard: {
-      ...styles.card,
-      marginBottom: "16px",
-    },
-    feeHeader: {
-      display: "flex",
-      justifyContent: "space-between",
-      alignItems: "start",
-      marginBottom: "8px",
-    },
-    assignmentCard: (isPaid: boolean) => ({
-      padding: "12px",
-      borderRadius: "4px",
-      background: isPaid ? "#dcfce7" : "#f3f4f6",
-      border: `1px solid ${isPaid ? "#bbf7d0" : "#ddd"}`,
-    }),
-  };
+  // const componentStyles = {
+  //   memberList: {
+  //     maxHeight: "200px",
+  //     overflowY: "auto" as const,
+  //     border: "1px solid #ddd",
+  //     borderRadius: "4px",
+  //     padding: "8px",
+  //   },
+  //   memberItem: {
+  //     display: "flex",
+  //     alignItems: "center",
+  //     marginBottom: "4px",
+  //   },
+  //   checkbox: {
+  //     marginRight: "8px",
+  //   },
+  //   feeList: {
+  //     display: "flex",
+  //     flexDirection: "column" as const,
+  //     gap: "16px",
+  //   },
+  //   feeCard: {
+  //     ...styles.card,
+  //     marginBottom: "16px",
+  //   },
+  //   feeHeader: {
+  //     display: "flex",
+  //     justifyContent: "space-between",
+  //     alignItems: "start",
+  //     marginBottom: "8px",
+  //   },
+  //   assignmentCard: (isPaid: boolean) => ({
+  //     padding: "12px",
+  //     borderRadius: "4px",
+  //     background: isPaid ? "#dcfce7" : "#f3f4f6",
+  //     border: `1px solid ${isPaid ? "#bbf7d0" : "#ddd"}`,
+  //   }),
+  // };
 
   return (
     <div className="container mx-auto py-6">
