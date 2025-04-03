@@ -48,6 +48,7 @@ export function SignUpForm({
                 email: data.email,
                 orgId: org.id,
                 role: "ADMIN",
+                createdAt: new Date(),
               });
               // 4. Redirect to dashboard page
               if (user) {

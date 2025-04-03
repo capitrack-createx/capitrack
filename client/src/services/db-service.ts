@@ -1,4 +1,4 @@
-import { collection, addDoc, getDocs, query, where, doc, getDoc, Timestamp, updateDoc, onSnapshot, and } from 'firebase/firestore';
+import { collection, addDoc, getDocs, query, where, doc, getDoc, Timestamp, updateDoc, onSnapshot } from 'firebase/firestore';
 import { db } from '../firebase';
 import type { Member, Organization, Fee, FeeAssignment, Transaction } from '@shared/types';
 import { InsertMember, InsertTransaction } from '@shared/schema';

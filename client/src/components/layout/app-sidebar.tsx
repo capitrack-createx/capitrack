@@ -1,11 +1,4 @@
-import {
-  CreditCard,
-  DollarSign,
-  FileText,
-  LayoutDashboard,
-  PieChart,
-  Users,
-} from "lucide-react";
+import { CreditCard, DollarSign, Users } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
