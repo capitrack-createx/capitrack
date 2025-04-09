@@ -82,85 +82,83 @@ export function MembersPage() {
         </div>
 
         {/* Add Member Card */}
-        <Card className="w-full lg:w-[400px]">
-          <CardHeader>
-            <CardTitle>Add New Member</CardTitle>
-            <CardDescription>
-              Add a new member to your organization
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Form {...form}>
-              <form
-                onSubmit={form.handleSubmit(onSubmit)}
-                className="space-y-4 flex flex-col items-center"
-              >
-                <div className="w-full space-y-4">
-                  <FormField
-                    control={form.control}
-                    name="name"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Name</FormLabel>
-                        <FormControl>
-                          <Input placeholder="John Doe" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="email"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Email</FormLabel>
-                        <FormControl>
-                          <Input
-                            type="email"
-                            placeholder="john@example.com"
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="phoneNumber"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Phone Number</FormLabel>
-                        <FormControl>
-                          <Input
-                            type="tel"
-                            placeholder="(123) 456-7890"
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-                <div className="flex justify-center w-full">
-                  <Button
-                    disabled={isLoading}
-                    type="submit"
-                    className="w-full bg-[#2B8A3E] hover:bg-[#2B8A3E]/90 text-white"
-                  >
-                    {isLoading ? (
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    ) : (
-                      <Plus className="mr-2 h-4 w-4" />
-                    )}
-                    Add Member
-                  </Button>
-                </div>
-              </form>
-            </Form>
-          </CardContent>
+        <Card className="p-6">
+          <div className="text-center mb-4">
+            <h2 className="font-semibold">Add New Member</h2>
+            <p className="text-muted-foreground mt-1">Add a new member to your organization</p>
+          </div>
+          <Form {...form}>
+            <form
+              onSubmit={form.handleSubmit(onSubmit)}
+              className="space-y-6"
+            >
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <FormField
+                  control={form.control}
+                  name="name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="font-medium">Name</FormLabel>
+                      <FormControl>
+                        <Input placeholder="John Doe" className="mt-1.5 h-12 bg-white" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="font-medium">Email</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="email"
+                          placeholder="john@example.com"
+                          className="mt-1.5 h-12 bg-white"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="phoneNumber"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="font-medium">Phone Number</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="tel"
+                          placeholder="(123) 456-7890"
+                          className="mt-1.5 h-12 bg-white"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              <div className="flex justify-end">
+                <Button
+                  disabled={isLoading}
+                  type="submit"
+                  className="h-9 px-6 bg-[#2B8A3E] hover:bg-[#2B8A3E]/90 text-white rounded-[10px] text-sm font-medium"
+                >
+                  {isLoading ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : (
+                    <Plus className="mr-2 h-4 w-4" />
+                  )}
+                  Add Member
+                </Button>
+              </div>
+            </form>
+          </Form>
         </Card>
 
         {/* Member List Section */}
