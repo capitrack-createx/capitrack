@@ -289,7 +289,7 @@ export const FeesPage = () => {
             <div className="flex justify-end">
               <Button
                 type="submit"
-                className="h-12 px-8 bg-[#2B8A3E] hover:bg-[#2B8A3E]/90 text-white rounded-full text-base"
+                className="h-9 px-6 bg-[#2B8A3E] hover:bg-[#2B8A3E]/90 text-white rounded-[10px] text-sm font-medium"
                 disabled={isLoading}
               >
                 {isLoading ? "Adding..." : "Add Fee"}
