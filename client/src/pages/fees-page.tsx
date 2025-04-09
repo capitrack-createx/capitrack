@@ -197,28 +197,27 @@ export const FeesPage = () => {
         </div>
 
         {/* Add Fee Form Section */}
-        <Card className="w-full lg:w-[400px]">
-          <CardHeader>
-            <CardTitle>Add New Fee</CardTitle>
-            <CardDescription>
-              Create a new fee for your organization
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleAddFee} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="name">Fee Name</Label>
+        <Card className="p-6">
+          <div className="text-center mb-4">
+            <h2 className="font-semibold">Add New Fee</h2>
+            <p className="text-muted-foreground mt-1">Create a new fee for your organization</p>
+          </div>
+          <form onSubmit={handleAddFee} className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div>
+                <Label htmlFor="name" className="font-medium">Fee Name</Label>
                 <Input
                   id="name"
                   name="name"
                   type="text"
                   placeholder="Fee name"
                   required
+                  className="mt-1.5 h-12 bg-white"
                 />
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="amount">Amount</Label>
+              <div>
+                <Label htmlFor="amount" className="font-medium">Amount</Label>
                 <Input
                   id="amount"
                   name="amount"
@@ -227,15 +226,25 @@ export const FeesPage = () => {
                   step="0.01"
                   placeholder="Amount"
                   required
+                  className="mt-1.5 h-12 bg-white"
                 />
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="dueDate">Due Date</Label>
-                <Input id="dueDate" name="dueDate" type="date" required />
+              <div>
+                <Label htmlFor="dueDate" className="font-medium">Due Date</Label>
+                <Input 
+                  id="dueDate" 
+                  name="dueDate" 
+                  type="date" 
+                  required 
+                  placeholder="mm/dd/yyyy"
+                  className="mt-1.5 h-12 bg-white"
+                />
               </div>
+            </div>
 
-              <div className="flex items-center space-x-2">
+            <div>
+              <div className="flex items-center space-x-2 mb-2">
                 <input
                   type="checkbox"
                   id="assignToAll"
@@ -243,11 +252,11 @@ export const FeesPage = () => {
                   checked={assignToAll}
                   onChange={(e) => setAssignToAll(e.target.checked)}
                 />
-                <Label htmlFor="assignToAll">Assign to all members</Label>
+                <Label htmlFor="assignToAll" className="font-medium">Assign to all members</Label>
               </div>
 
               {!assignToAll && (
-                <div className="border rounded-md p-4 max-h-[200px] overflow-y-auto">
+                <div className="border rounded-lg p-4 bg-white">
                   {members.length === 0 ? (
                     <div className="text-center text-muted-foreground py-2">
                       No members available
@@ -266,7 +275,7 @@ export const FeesPage = () => {
                             value={member.id}
                             className="h-4 w-4 rounded border-gray-300"
                           />
-                          <Label htmlFor={`member-${member.id}`}>
+                          <Label htmlFor={`member-${member.id}`} className="font-medium">
                             {member.name}
                           </Label>
                         </div>
@@ -275,16 +284,18 @@ export const FeesPage = () => {
                   )}
                 </div>
               )}
+            </div>
 
+            <div className="flex justify-end">
               <Button
                 type="submit"
-                className="w-full bg-[#2B8A3E] hover:bg-[#2B8A3E]/90 text-white"
+                className="h-12 px-8 bg-[#2B8A3E] hover:bg-[#2B8A3E]/90 text-white rounded-full text-base"
                 disabled={isLoading}
               >
                 {isLoading ? "Adding..." : "Add Fee"}
               </Button>
-            </form>
-          </CardContent>
+            </div>
+          </form>
         </Card>
 
         {/* Fees List Section */}
