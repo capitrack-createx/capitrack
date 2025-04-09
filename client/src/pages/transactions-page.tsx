@@ -110,7 +110,7 @@ export const TransactionsPage = () => {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="All">All</SelectItem>
-                <SelectItem value="Income">Income</SelectItem>
+                <SelectItem value="Revenue">Revenue</SelectItem>
                 <SelectItem value="Expense">Expense</SelectItem>
               </SelectContent>
             </Select>
@@ -142,7 +142,7 @@ export const TransactionsPage = () => {
                     <TableCell>{transaction.description}</TableCell>
                     <TableCell
                       className={`text-right ${
-                        transaction.type === "Income"
+                        transaction.type === "Revenue"
                           ? "text-green-600"
                           : "text-red-600"
                       }`}
@@ -185,7 +185,7 @@ export const TransactionsPage = () => {
                             </SelectTrigger>
                             <SelectContent>
                               <SelectItem value="Expense">Expense</SelectItem>
-                              <SelectItem value="Income">Income</SelectItem>
+                              <SelectItem value="Revenue">Revenue</SelectItem>
                             </SelectContent>
                           </Select>
                         </FormControl>
