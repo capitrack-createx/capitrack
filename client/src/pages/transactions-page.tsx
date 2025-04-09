@@ -243,17 +243,17 @@ export const TransactionsPage = () => {
             <TableBody>
               {transactions.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center">
+                  <TableCell colSpan={5} className="text-left">
                     No transactions found
                   </TableCell>
                 </TableRow>
               ) : (
                 transactions.map((transaction, index) => (
                   <TableRow key={index}>
-                    <TableCell>{transaction.date.toString()}</TableCell>
-                    <TableCell>{transaction.type}</TableCell>
-                    <TableCell>{transaction.category}</TableCell>
-                    <TableCell>{transaction.description}</TableCell>
+                    <TableCell className="text-left">{transaction.date.toString()}</TableCell>
+                    <TableCell className="text-left">{transaction.type}</TableCell>
+                    <TableCell className="text-left">{transaction.category}</TableCell>
+                    <TableCell className="text-left">{transaction.description}</TableCell>
                     <TableCell
                       className={`text-right ${
                         transaction.type === "Revenue"
