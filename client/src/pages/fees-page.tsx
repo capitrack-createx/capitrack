@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useOrganization } from "@/context/OrganizationContext";
+import { toast } from "sonner";
 
 type Member = {
   id: string;
@@ -39,6 +40,9 @@ export const FeesPage = () => {
     fee: Fee;
   } | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [editingFeeId, setEditingFeeId] = useState<string | null>(null);
+  const [editForm, setEditForm] = useState<{ [key: string]: any }>({});
+  const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
 
   useEffect(() => {
     if (organization) {
@@ -148,45 +152,60 @@ export const FeesPage = () => {
     form.reset();
   }
 
-  // Component-specific styles that extend shared styles
-  // const componentStyles = {np
-  //   memberList: {
-  //     maxHeight: "200px",
-  //     overflowY: "auto" as const,
-  //     border: "1px solid #ddd",
-  //     borderRadius: "4px",
-  //     padding: "8px",
-  //   },
-  //   memberItem: {
-  //     display: "flex",
-  //     alignItems: "center",
-  //     marginBottom: "4px",
-  //   },
-  //   checkbox: {
-  //     marginRight: "8px",
-  //   },
-  //   feeList: {
-  //     display: "flex",
-  //     flexDirection: "column" as const,
-  //     gap: "16px",
-  //   },
-  //   feeCard: {
-  //     ...styles.card,
-  //     marginBottom: "16px",
-  //   },
-  //   feeHeader: {
-  //     display: "flex",
-  //     justifyContent: "space-between",
-  //     alignItems: "start",
-  //     marginBottom: "8px",
-  //   },
-  //   assignmentCard: (isPaid: boolean) => ({
-  //     padding: "12px",
-  //     borderRadius: "4px",
-  //     background: isPaid ? "#dcfce7" : "#f3f4f6",
-  //     border: `1px solid ${isPaid ? "#bbf7d0" : "#ddd"}`,
-  //   }),
-  // };
+  const handleEdit = (fee: Fee) => {
+    setEditingFeeId(fee.id);
+    setEditForm({
+      name: fee.name,
+      amount: fee.amount.toString(),
+      dueDate: new Date(fee.dueDate).toISOString().split("T")[0],
+      memberIds: fee.memberIds,
+    });
+  };
+
+  const handleSave = async (feeId: string) => {
+    if (!user || !organization) return;
+    setIsLoading(true);
+    try {
+      await dbService.updateFee(feeId, {
+        name: editForm.name,
+        amount: parseFloat(editForm.amount),
+        dueDate: new Date(editForm.dueDate),
+        memberIds: editForm.memberIds,
+      });
+      loadFees();
+      setEditingFeeId(null);
+      toast.success("Fee updated successfully");
+    } catch (error) {
+      console.error("Error updating fee:", error);
+      toast.error("Failed to update fee");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleDelete = async (feeId: string) => {
+    if (!user || !organization) return;
+    setIsLoading(true);
+    try {
+      await dbService.deleteFee(feeId);
+      loadFees();
+      toast.success("Fee deleted successfully");
+    } catch (error) {
+      console.error("Error deleting fee:", error);
+      toast.error("Failed to delete fee");
+    } finally {
+      setIsLoading(false);
+      setConfirmDelete(null);
+    }
+  };
+
+  const handleConfirmDelete = (feeId: string) => {
+    setConfirmDelete(feeId);
+  };
+
+  const handleCancelDelete = () => {
+    setConfirmDelete(null);
+  };
 
   return (
     <div className="container mx-auto py-6">
@@ -219,26 +238,101 @@ export const FeesPage = () => {
                       key={fee.id}
                       className="grid grid-cols-5 gap-4 p-4 items-center hover:bg-muted/50"
                     >
-                      <div className="font-medium">{fee.name}</div>
-                      <div className="text-blue-600 font-medium">
-                        ${fee.amount}
-                      </div>
-                      <div>{new Date(fee.dueDate).toLocaleDateString()}</div>
-                      <div>{fee.memberIds?.length || 0} members</div>
-                      <div>
-                        <button
-                          onClick={() =>
-                            setSelectedFee(
-                              selectedFee === fee.id ? "" : fee.id || ""
-                            )
-                          }
-                          className="px-3 py-1.5 text-sm bg-secondary text-secondary-foreground rounded-md hover:bg-secondary/80"
-                        >
-                          {selectedFee === fee.id
-                            ? "Hide Details"
-                            : "View Details"}
-                        </button>
-                      </div>
+                      {editingFeeId === fee.id ? (
+                        <>
+                          <div className="flex flex-col">
+                            <Input
+                              defaultValue={fee.name}
+                              onChange={(e) =>
+                                setEditForm({ ...editForm, name: e.target.value })
+                              }
+                            />
+                          </div>
+                          <div className="flex flex-col">
+                            <Input
+                              defaultValue={fee.amount.toString()}
+                              onChange={(e) =>
+                                setEditForm({ ...editForm, amount: e.target.value })
+                              }
+                              type="number"
+                            />
+                          </div>
+                          <div className="flex flex-col">
+                            <Input
+                              defaultValue={new Date(fee.dueDate)
+                                .toISOString()
+                                .split("T")[0]}
+                              onChange={(e) =>
+                                setEditForm({ ...editForm, dueDate: e.target.value })
+                              }
+                              type="date"
+                            />
+                          </div>
+                          <div>
+                            {fee.memberIds?.length || 0} members
+                          </div>
+                          <div className="flex flex-col gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleSave(fee.id)}
+                              disabled={isLoading}
+                            >
+                              Save
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setEditingFeeId(null)}
+                              disabled={isLoading}
+                            >
+                              Cancel
+                            </Button>
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          <div className="font-medium">{fee.name}</div>
+                          <div className="text-blue-600 font-medium">
+                            ${fee.amount}
+                          </div>
+                          <div>{new Date(fee.dueDate).toLocaleDateString()}</div>
+                          <div>{fee.memberIds?.length || 0} members</div>
+                          <div className="flex flex-col gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleEdit(fee)}
+                              disabled={isLoading}
+                            >
+                              Edit
+                            </Button>
+                            <Button
+                              variant="destructive"
+                              size="sm"
+                              onClick={() => handleConfirmDelete(fee.id)}
+                              disabled={isLoading}
+                            >
+                              Delete
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() =>
+                                setSelectedFee(
+                                  selectedFee === fee.id ? "" : fee.id || ""
+                                )
+                              }
+                              disabled={isLoading}
+                              className="w-full bg-muted text-muted-foreground hover:bg-muted/80"
+                            >
+                              {selectedFee === fee.id
+                                ? "Hide Details"
+                                : "View Details"}
+                            </Button>
+                          </div>
+                        </>
+                      )}
                     </div>
                   ))}
                   {fees.length === 0 && (
@@ -462,6 +556,36 @@ export const FeesPage = () => {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {confirmDelete && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-background p-6 rounded-lg shadow-lg">
+            <h3 className="text-lg font-semibold mb-4">
+              Confirm Delete
+            </h3>
+            <p className="text-muted-foreground mb-4">
+              Are you sure you want to delete this fee? This action cannot be
+              undone.
+            </p>
+            <div className="flex gap-2 justify-end">
+              <Button
+                variant="outline"
+                onClick={handleCancelDelete}
+                disabled={isLoading}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={() => handleDelete(confirmDelete)}
+                disabled={isLoading}
+              >
+                Delete
+              </Button>
+            </div>
           </div>
         </div>
       )}

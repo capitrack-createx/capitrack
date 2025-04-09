@@ -1,4 +1,4 @@
-import { collection, addDoc, getDocs, query, where, doc, getDoc, Timestamp, updateDoc, onSnapshot } from 'firebase/firestore';
+import { collection, addDoc, getDocs, query, where, doc, getDoc, Timestamp, updateDoc, onSnapshot, deleteDoc } from 'firebase/firestore';
 import { db } from '../firebase';
 import type { Member, Organization, Fee, FeeAssignment, Transaction } from '@shared/types';
 import { InsertMember, InsertTransaction } from '@shared/schema';
@@ -14,6 +14,18 @@ export class ValidationError extends Error {
   }
 }
 
+export type Member = {
+  id: string;
+  name: string;
+  email: string;
+  phoneNumber?: string;
+  role: 'ADMIN' | 'MEMBER';
+  status: 'ACTIVE' | 'INACTIVE';
+  orgId: string;
+  createdAt: Date;
+  updatedAt?: Date;
+};
+
 export const dbService = {
   // Members
   async addMember(data: InsertMember): Promise<void> {
@@ -28,7 +40,15 @@ export const dbService = {
       if (snapshot.size > 0) {
         throw new ValidationError('Duplicate Member (email)')
       }
-      await addDoc(collection(db, 'members'), data);
+      
+      // Ensure status is set to ACTIVE
+      const memberData = {
+        ...data,
+        status: data.status || 'ACTIVE',
+        createdAt: Timestamp.now()
+      };
+
+      await addDoc(collection(db, 'members'), memberData);
     } catch (error) {
       console.error('Error adding member:', error);
       if (error instanceof ValidationError) {
@@ -52,6 +72,29 @@ export const dbService = {
     } catch (error) {
       console.error('Error getting members:', error);
       return [];
+    }
+  },
+
+  async updateMember(memberId: string, data: Partial<Pick<Member, 'name' | 'email' | 'phoneNumber' | 'role' | 'status'>>): Promise<void> {
+    try {
+      const docRef = doc(db, 'members', memberId);
+      await updateDoc(docRef, {
+        ...data,
+        updatedAt: Timestamp.now()
+      });
+    } catch (error) {
+      console.error('Error updating member:', error);
+      throw new Error('Failed to update member');
+    }
+  },
+
+  async deleteMember(memberId: string): Promise<void> {
+    try {
+      const docRef = doc(db, 'members', memberId);
+      await deleteDoc(docRef);
+    } catch (error) {
+      console.error('Error deleting member:', error);
+      throw new Error('Failed to delete member');
     }
   },
 
@@ -163,6 +206,75 @@ export const dbService = {
     } catch (error) {
       console.error('Error getting fees:', error);
       return [];
+    }
+  },
+
+  async updateFee(feeId: string, data: Partial<Pick<Fee, 'name' | 'amount' | 'dueDate' | 'memberIds'>>): Promise<void> {
+    try {
+      const docRef = doc(db, 'fees', feeId);
+      const updateData = {
+        ...data,
+        updatedAt: Timestamp.now()
+      };
+      
+      // If dueDate is provided, convert to Timestamp
+      if (data.dueDate) {
+        updateData.dueDate = Timestamp.fromDate(data.dueDate);
+      }
+
+      await updateDoc(docRef, updateData);
+
+      // If memberIds changed, update fee assignments
+      if (data.memberIds) {
+        // First delete all existing assignments
+        const assignments = await getDocs(query(
+          collection(db, 'feeAssignments'),
+          where('feeId', '==', feeId)
+        ));
+        
+        await Promise.all(
+          assignments.docs.map(async (doc) => {
+            await deleteDoc(doc.ref);
+          })
+        );
+
+        // Create new assignments
+        await Promise.all(
+          data.memberIds.map(memberId =>
+            this.createFeeAssignment({
+              feeId,
+              memberId,
+              isPaid: false
+            })
+          )
+        );
+      }
+    } catch (error) {
+      console.error('Error updating fee:', error);
+      throw new Error('Failed to update fee');
+    }
+  },
+
+  async deleteFee(feeId: string): Promise<void> {
+    try {
+      // First delete all fee assignments
+      const assignments = await getDocs(query(
+        collection(db, 'feeAssignments'),
+        where('feeId', '==', feeId)
+      ));
+      
+      await Promise.all(
+        assignments.docs.map(async (doc) => {
+          await deleteDoc(doc.ref);
+        })
+      );
+
+      // Then delete the fee itself
+      const docRef = doc(db, 'fees', feeId);
+      await deleteDoc(docRef);
+    } catch (error) {
+      console.error('Error deleting fee:', error);
+      throw new Error('Failed to delete fee');
     }
   },
 

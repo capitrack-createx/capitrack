@@ -29,6 +29,9 @@ import { toast } from "sonner";
 export function MembersPage() {
   const [members, setMembers] = useState<Member[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [editingMemberId, setEditingMemberId] = useState<string | null>(null);
+  const [editForm, setEditForm] = useState<{ [key: string]: any }>({});
+  const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
   const { user } = useAuth();
   const { organization } = useOrganization();
 
@@ -41,6 +44,7 @@ export function MembersPage() {
       name: "",
       orgId: organization!.id,
       createdAt: new Date(),
+      status: "ACTIVE"
     },
   });
 
@@ -73,6 +77,64 @@ export function MembersPage() {
     setIsLoading(false);
   };
 
+  const handleEdit = (member: Member) => {
+    setEditingMemberId(member.id);
+    setEditForm({
+      name: member.name,
+      email: member.email,
+      phoneNumber: member.phoneNumber,
+      role: member.role,
+      status: member.status,
+    });
+  };
+
+  const handleSave = async (memberId: string) => {
+    if (!user || !organization) return;
+    setIsLoading(true);
+    try {
+      await dbService.updateMember(memberId, {
+        ...editForm,
+        updatedAt: new Date(),
+      });
+      loadMembers();
+      setEditingMemberId(null);
+      toast.success("Member updated successfully");
+    } catch (error) {
+      console.error("Error updating member:", error);
+      toast.error("Failed to update member");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleCancel = () => {
+    setEditingMemberId(null);
+  };
+
+  const handleDelete = async (memberId: string) => {
+    if (!user || !organization) return;
+    setIsLoading(true);
+    try {
+      await dbService.deleteMember(memberId);
+      loadMembers();
+      toast.success("Member deleted successfully");
+    } catch (error) {
+      console.error("Error deleting member:", error);
+      toast.error("Failed to delete member");
+    } finally {
+      setIsLoading(false);
+      setConfirmDelete(null);
+    }
+  };
+
+  const handleConfirmDelete = (memberId: string) => {
+    setConfirmDelete(memberId);
+  };
+
+  const handleCancelDelete = () => {
+    setConfirmDelete(null);
+  };
+
   return (
     <div className="container mx-auto py-6">
       <div className="flex flex-col gap-6">
@@ -89,42 +151,168 @@ export function MembersPage() {
             </div>
             <div className="rounded-md border overflow-x-auto">
               <div className="min-w-[600px] lg:min-w-0">
-                <div className="grid grid-cols-5 gap-4 p-4 bg-muted/50 font-medium">
+                <div className="grid grid-cols-6 gap-4 p-4 bg-muted/50 font-medium">
                   <div>Name</div>
                   <div>Email</div>
                   <div>Phone</div>
                   <div>Join Date</div>
                   <div>Status</div>
+                  <div>Actions</div>
                 </div>
                 <div className="divide-y">
                   {members.map((member) => (
                     <div
                       key={member.id}
-                      className="grid grid-cols-5 gap-4 p-4 items-center hover:bg-muted/50"
+                      className="grid grid-cols-6 gap-4 p-4 items-center hover:bg-muted/50"
                     >
-                      <div className="truncate">{member.name || "-"}</div>
-                      <div className="truncate">{member.email || "-"}</div>
-                      <div className="truncate">
-                        {member.phoneNumber || "-"}
-                      </div>
-                      <div>
-                        {member.createdAt
-                          ? member.createdAt
-                              .toDate()
-                              .toISOString()
-                              .split("T")[0]
-                          : "-"}
-                      </div>
-                      <div>
-                        <span className="inline-flex items-center rounded-full px-2 py-1 text-xs font-medium bg-green-50 text-green-700 ring-1 ring-inset ring-green-600/20">
-                          Active
-                        </span>
-                      </div>
+                      {editingMemberId === member.id ? (
+                        <>
+                          <div className="flex flex-col">
+                            <Input
+                              defaultValue={member.name}
+                              onChange={(e) =>
+                                setEditForm({ ...editForm, name: e.target.value })
+                              }
+                            />
+                          </div>
+                          <div className="flex flex-col">
+                            <Input
+                              defaultValue={member.email}
+                              onChange={(e) =>
+                                setEditForm({ ...editForm, email: e.target.value })
+                              }
+                            />
+                          </div>
+                          <div className="flex flex-col">
+                            <Input
+                              defaultValue={member.phoneNumber}
+                              onChange={(e) =>
+                                setEditForm({ ...editForm, phoneNumber: e.target.value })
+                              }
+                            />
+                          </div>
+                          <div>
+                            {member.createdAt
+                              ? member.createdAt
+                                  .toDate()
+                                  .toISOString()
+                                  .split("T")[0]
+                              : "-"}
+                          </div>
+                          <div>
+                            <span 
+                              className={`px-2 py-1 rounded-full text-xs font-medium cursor-pointer ${
+                                editForm.status === 'ACTIVE'
+                                  ? 'bg-green-100 text-green-800 hover:bg-green-200'
+                                  : 'bg-red-100 text-red-800 hover:bg-red-200'
+                              }`}
+                              onClick={() => {
+                                setEditForm({
+                                  ...editForm,
+                                  status: editForm.status === "ACTIVE" ? "INACTIVE" : "ACTIVE",
+                                });
+                              }}
+                              disabled={isLoading}
+                            >
+                              {editForm.status}
+                            </span>
+                          </div>
+                          <div className="flex flex-col gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleSave(member.id)}
+                              disabled={isLoading}
+                            >
+                              Save
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={handleCancel}
+                              disabled={isLoading}
+                            >
+                              Cancel
+                            </Button>
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          <div className="truncate">{member.name || "-"}</div>
+                          <div className="truncate">{member.email || "-"}</div>
+                          <div className="truncate">
+                            {member.phoneNumber || "-"}
+                          </div>
+                          <div>
+                            {member.createdAt
+                              ? member.createdAt
+                                  .toDate()
+                                  .toISOString()
+                                  .split("T")[0]
+                              : "-"}
+                          </div>
+                          <div>
+                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                              member.status === 'ACTIVE'
+                                ? 'bg-green-100 text-green-800'
+                                : 'bg-red-100 text-red-800'
+                            }`}>
+                              {member.status}
+                            </span>
+                          </div>
+                          <div className="flex flex-col gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleEdit(member)}
+                              disabled={isLoading}
+                            >
+                              Edit
+                            </Button>
+                            <Button
+                              variant="destructive"
+                              size="sm"
+                              onClick={() => handleConfirmDelete(member.id)}
+                              disabled={isLoading}
+                            >
+                              Delete
+                            </Button>
+                          </div>
+                        </>
+                      )}
                     </div>
                   ))}
                   {members.length === 0 && (
                     <div className="p-4 text-center text-muted-foreground">
                       No members found
+                    </div>
+                  )}
+                  {confirmDelete && (
+                    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+                      <div className="bg-background p-6 rounded-lg shadow-lg">
+                        <h3 className="text-lg font-semibold mb-4">
+                          Confirm Delete
+                        </h3>
+                        <p className="text-muted-foreground mb-4">
+                          Are you sure you want to delete this member? This action cannot be undone.
+                        </p>
+                        <div className="flex gap-2 justify-end">
+                          <Button
+                            variant="outline"
+                            onClick={handleCancelDelete}
+                            disabled={isLoading}
+                          >
+                            Cancel
+                          </Button>
+                          <Button
+                            variant="destructive"
+                            onClick={() => handleDelete(confirmDelete)}
+                            disabled={isLoading}
+                          >
+                            Delete
+                          </Button>
+                        </div>
+                      </div>
                     </div>
                   )}
                 </div>
