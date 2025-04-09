@@ -95,11 +95,12 @@ export const TransactionsPage = () => {
     <div className="p-6 max-w-7xl mx-auto">
       <h2 className="text-2xl font-semibold mb-6 text-left">Transactions</h2>
 
-      <div className="space-y-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Transaction History Section */}
-        <div>
+        <div className="md:col-span-2">
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-xl font-medium">Transaction History</h3>
+            {/* Filter component remains unchanged */}
             <Select value="All" onValueChange={() => {}}>
               <SelectTrigger className="w-24">
                 <SelectValue />
@@ -153,115 +154,117 @@ export const TransactionsPage = () => {
         </div>
 
         {/* Add Transaction Section */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Add Transaction</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <Form {...form}>
-              <form
-                className="space-y-4"
-                onSubmit={form.handleSubmit(onSubmit)}
-              >
-                {/* Transaction Type Field */}
-                <FormField
-                  control={form.control}
-                  name="type"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Type</FormLabel>
-                      <FormControl>
-                        <Select
-                          value={field.value}
-                          onValueChange={field.onChange}
-                        >
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="Expense">Expense</SelectItem>
-                            <SelectItem value="Revenue">Revenue</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                {/* Amount Field */}
-                <FormField
-                  control={form.control}
-                  name="amount"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Amount</FormLabel>
-                      <FormControl>
-                        <Input {...field} type="number" placeholder="0" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                {/* Category Field */}
-                <FormField
-                  control={form.control}
-                  name="category"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Category</FormLabel>
-                      <FormControl>
-                        <Select
-                          value={field.value}
-                          onValueChange={field.onChange}
-                        >
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="Other">Other</SelectItem>
-                            <SelectItem value="Event">Event</SelectItem>
-                            <SelectItem value="Supplies">Supplies</SelectItem>
-                            <SelectItem value="Membership">
-                              Membership
-                            </SelectItem>
-                            <SelectItem value="Sponsorship">
-                              Sponsorship
-                            </SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                {/* Description Field */}
-                <FormField
-                  control={form.control}
-                  name="description"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Description</FormLabel>
-                      <FormControl>
-                        <Input {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <Button
-                  type="submit"
-                  className="w-full bg-green-700 hover:bg-green-800"
+        <div>
+          <Card>
+            <CardHeader>
+              <CardTitle>Add Transaction</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <Form {...form}>
+                <form
+                  className="space-y-4"
+                  onSubmit={form.handleSubmit(onSubmit)}
                 >
-                  Add Transaction
-                </Button>
-              </form>
-            </Form>
-          </CardContent>
-        </Card>
+                  {/* Transaction Type Field */}
+                  <FormField
+                    control={form.control}
+                    name="type"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Type</FormLabel>
+                        <FormControl>
+                          <Select
+                            value={field.value}
+                            onValueChange={field.onChange}
+                          >
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="Expense">Expense</SelectItem>
+                              <SelectItem value="Revenue">Revenue</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  {/* Amount Field */}
+                  <FormField
+                    control={form.control}
+                    name="amount"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Amount</FormLabel>
+                        <FormControl>
+                          <Input {...field} type="number" placeholder="0" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  {/* Category Field */}
+                  <FormField
+                    control={form.control}
+                    name="category"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Category</FormLabel>
+                        <FormControl>
+                          <Select
+                            value={field.value}
+                            onValueChange={field.onChange}
+                          >
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="Other">Other</SelectItem>
+                              <SelectItem value="Event">Event</SelectItem>
+                              <SelectItem value="Supplies">Supplies</SelectItem>
+                              <SelectItem value="Membership">
+                                Membership
+                              </SelectItem>
+                              <SelectItem value="Sponsorship">
+                                Sponsorship
+                              </SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  {/* Description Field */}
+                  <FormField
+                    control={form.control}
+                    name="description"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Description</FormLabel>
+                        <FormControl>
+                          <Input {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <Button
+                    type="submit"
+                    className="w-full bg-green-700 hover:bg-green-800"
+                  >
+                    Add Transaction
+                  </Button>
+                </form>
+              </Form>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
   );
