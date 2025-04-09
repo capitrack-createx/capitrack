@@ -18,6 +18,7 @@ import {
 
 import { Organization } from "@shared/types";
 import { useEffect } from "react";
+import { Link } from "wouter";
 import React from "react";
 import { useOrganization } from "@/context/OrganizationContext";
 
@@ -76,6 +77,15 @@ export function TeamSwitcher() {
             ) : (
               <></>
             )}
+            <DropdownMenuItem
+              key="newOrganization"
+            >
+              <SidebarMenuButton asChild>
+                  <Link to={"/app/organization"}>
+                    <span>{"Create Organization"}</span>
+                  </Link>
+                </SidebarMenuButton>
+            </DropdownMenuItem>
             <DropdownMenuSeparator />
             {/* <DropdownMenuItem className="gap-2 p-2">
               <div className="flex size-6 items-center justify-center rounded-md border bg-background">

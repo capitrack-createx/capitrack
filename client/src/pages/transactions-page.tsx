@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useContext, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -27,7 +27,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { InsertTransaction, InsertTransactionSchema } from "@shared/schema";
+import { InsertTransaction, InsertTransactionSchema} from "@shared/schema";
 import { useAuth } from "@/services/auth-service";
 import { useOrganization } from "@/context/OrganizationContext";
 import { dbService } from "@/services/db-service";
@@ -90,6 +90,44 @@ export const TransactionsPage = () => {
         console.log("Error creating transaction:", error);
       });
   };
+
+  function generateCsv(data: any[], headers?: string[]): string {
+    if (!data || data.length === 0) {
+      return '';
+    }
+  
+    const csvRows = [];
+  
+    if (headers) {
+      csvRows.push(headers.join(','));
+    } else if (data.length > 0) {
+      const firstItem = data[0];
+      if (typeof firstItem === 'object' && firstItem !== null) {
+            csvRows.push("description,category,amount,date");
+      }
+    }
+  
+    for (const item of data) {
+        if (typeof item === 'object' && item !== null) {
+            csvRows.push(item.description + "," + item.category + "," + item.amount.toFixed(2) * (item.type === 'Income'? 1: -1) + "," + item.date.toString());
+        } else {
+            csvRows.push(String(item));
+        }
+    }
+    return csvRows.join('\n');
+  }
+
+  function downloadCsv(csvString: string, filename: string = 'data.csv'): void {
+    const blob = new Blob([csvString], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+}
 
   return (
     <div className="p-6 max-w-7xl mx-auto">
@@ -265,6 +303,22 @@ export const TransactionsPage = () => {
                   </Button>
                 </form>
               </Form>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader>
+              Export Transactions
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <Button
+                className="w-full bg-green-700 hover:bg-green-800"
+                onClick={() => {
+                  // const selectedCategory = CardContent.getValues("category");
+                  downloadCsv(generateCsv(transactions), organization?.name + " Transactions");
+                }}
+              >
+                Download CSV
+              </Button>
             </CardContent>
           </Card>
         </div>

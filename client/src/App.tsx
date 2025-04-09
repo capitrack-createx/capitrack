@@ -9,6 +9,8 @@ import { MembersPage } from "@/pages/members-page";
 import { FeesPage } from "@/pages/fees-page";
 import { BudgetsPage } from "@/pages/budgets-page";
 import { ReportsPage } from "@/pages/reports-page";
+import { Settings } from "@/pages/settings-page";
+import { Organizations } from "@/pages/organization-page";
 import { TransactionsPage } from "@/pages/transactions-page";
 import { OrganizationProvider } from "@/context/OrganizationContext";
 
@@ -35,6 +37,8 @@ function App() {
                     path="/app/transactions"
                     component={TransactionsPage}
                   />
+                  <Route path="/app/settings" component={Settings} />
+                  <Route path="/app/organization" component={Organizations} />
                 </Switch>
               </AppLayout>
             </OrganizationProvider>

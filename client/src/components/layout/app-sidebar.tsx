@@ -1,4 +1,4 @@
-import { CreditCard, DollarSign, Users } from "lucide-react";
+import { CreditCard, DollarSign, Users, LayoutDashboard, Settings, LogOut } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -10,16 +10,17 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
+import { logout } from "@/services/auth-service"; 
 import { Link } from "wouter";
 import { TeamSwitcher } from "@/components/ui/team-switcher";
 
 // Menu items.
 const items = [
-  // {
-  //   title: "Dashboard",
-  //   url: "/app/dashboard",
-  //   icon: LayoutDashboard,
-  // },
+  {
+    title: "Dashboard",
+    url: "/app/dashboard",
+    icon: LayoutDashboard,
+  },
   {
     title: "Members",
     url: "/app/members",
@@ -68,6 +69,20 @@ export function AppSidebar() {
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
+              <SidebarMenuItem key="Settings">
+                <SidebarMenuButton asChild>
+                  <Link to={"/app/settings"}>
+                    <Settings />
+                    <span>{"Settings"}</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem onClick={() => logout()} key="LogOut">
+                <SidebarMenuButton>
+                  <LogOut />
+                  <span>{"Log Out"}</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
