@@ -12,6 +12,7 @@ export interface Member {
     orgId: string; // reference to the organization
     role: 'ADMIN' | 'MEMBER';
     phoneNumber?: string;
+    status: 'ACTIVE' | 'INACTIVE';
     createdAt?: Timestamp;
   }
 

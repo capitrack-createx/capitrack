@@ -74,6 +74,7 @@ export const InsertMemberSchema = z.object({
     { message: "Invalid phone number, include extension +1"}
   ).transform((value) => parsePhoneNumberWithError(value).number.toString()).optional().or(z.literal('')),
   createdAt: z.date(),
+  status: z.enum(['ACTIVE', 'INACTIVE']).default('ACTIVE')
 })
 
 export type InsertMember = z.infer<typeof InsertMemberSchema>;

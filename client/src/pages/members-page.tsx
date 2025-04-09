@@ -92,9 +92,9 @@ export function MembersPage() {
     if (!user || !organization) return;
     setIsLoading(true);
     try {
+      // Only pass the fields that are allowed by the updateMember function
       await dbService.updateMember(memberId, {
         ...editForm,
-        updatedAt: new Date(),
       });
       loadMembers();
       setEditingMemberId(null);
@@ -200,22 +200,22 @@ export function MembersPage() {
                               : "-"}
                           </div>
                           <div>
-                            <span 
-                              className={`px-2 py-1 rounded-full text-xs font-medium cursor-pointer ${
-                                editForm.status === 'ACTIVE'
-                                  ? 'bg-green-100 text-green-800 hover:bg-green-200'
-                                  : 'bg-red-100 text-red-800 hover:bg-red-200'
-                              }`}
-                              onClick={() => {
-                                setEditForm({
-                                  ...editForm,
-                                  status: editForm.status === "ACTIVE" ? "INACTIVE" : "ACTIVE",
-                                });
-                              }}
-                              disabled={isLoading}
-                            >
-                              {editForm.status}
-                            </span>
+                          <button 
+                            className={`px-2 py-1 rounded-full text-xs font-medium cursor-pointer ${
+                              editForm.status === 'ACTIVE'
+                                ? 'bg-green-100 text-green-800 hover:bg-green-200'
+                                : 'bg-red-100 text-red-800 hover:bg-red-200'
+                            }`}
+                            onClick={() => {
+                              setEditForm({
+                                ...editForm,
+                                status: editForm.status === "ACTIVE" ? "INACTIVE" : "ACTIVE",
+                              });
+                            }}
+                            disabled={isLoading}
+                          >
+                            {editForm.status}
+                          </button>
                           </div>
                           <div className="flex flex-col gap-2">
                             <Button

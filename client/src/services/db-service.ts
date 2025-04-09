@@ -14,18 +14,6 @@ export class ValidationError extends Error {
   }
 }
 
-export type Member = {
-  id: string;
-  name: string;
-  email: string;
-  phoneNumber?: string;
-  role: 'ADMIN' | 'MEMBER';
-  status: 'ACTIVE' | 'INACTIVE';
-  orgId: string;
-  createdAt: Date;
-  updatedAt?: Date;
-};
-
 export const dbService = {
   // Members
   async addMember(data: InsertMember): Promise<void> {
@@ -212,17 +200,21 @@ export const dbService = {
   async updateFee(feeId: string, data: Partial<Pick<Fee, 'name' | 'amount' | 'dueDate' | 'memberIds'>>): Promise<void> {
     try {
       const docRef = doc(db, 'fees', feeId);
-      const updateData = {
+      
+      // Handle dueDate conversion first
+      const dueDate = data.dueDate ? (
+        data.dueDate instanceof Date 
+          ? Timestamp.fromDate(data.dueDate)
+          : data.dueDate
+      ) : undefined;
+
+      const firebaseData = {
         ...data,
+        dueDate,
         updatedAt: Timestamp.now()
       };
-      
-      // If dueDate is provided, convert to Timestamp
-      if (data.dueDate) {
-        updateData.dueDate = Timestamp.fromDate(data.dueDate);
-      }
 
-      await updateDoc(docRef, updateData);
+      await updateDoc(docRef, firebaseData);
 
       // If memberIds changed, update fee assignments
       if (data.memberIds) {

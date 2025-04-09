@@ -153,7 +153,7 @@ export const FeesPage = () => {
   }
 
   const handleEdit = (fee: Fee) => {
-    setEditingFeeId(fee.id);
+    setEditingFeeId(fee.id!);
     setEditForm({
       name: fee.name,
       amount: fee.amount.toString(),
@@ -275,7 +275,7 @@ export const FeesPage = () => {
                             <Button
                               variant="outline"
                               size="sm"
-                              onClick={() => handleSave(fee.id)}
+                              onClick={() => handleSave(fee.id!)}
                               disabled={isLoading}
                             >
                               Save
@@ -310,7 +310,7 @@ export const FeesPage = () => {
                             <Button
                               variant="destructive"
                               size="sm"
-                              onClick={() => handleConfirmDelete(fee.id)}
+                              onClick={() => handleConfirmDelete(fee.id!)}
                               disabled={isLoading}
                             >
                               Delete
