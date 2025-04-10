@@ -48,7 +48,7 @@ export const FeeAssignmentSchema = z.object({
 
 export const InsertTransactionSchema = z.object({
   id: z.string().optional(),
-  type: z.enum(["Income", "Expense"]),
+  type: z.enum(["Revenue", "Expense"]),
   amount: z.preprocess((val) => {
     if (typeof val === "string") {
       return parseFloat(val);

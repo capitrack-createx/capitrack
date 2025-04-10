@@ -92,82 +92,25 @@ export const TransactionsPage = () => {
   };
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
-      <h1 className="text-3xl font-bold text-green-700 mb-2">
-        {organization?.name}
-      </h1>
-      <h2 className="text-2xl font-semibold mb-6">Transactions</h2>
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* Transaction History Section */}
-        <div className="md:col-span-2">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-xl font-medium">Transaction History</h3>
-            {/* Filter component remains unchanged */}
-            <Select value="All" onValueChange={() => {}}>
-              <SelectTrigger className="w-24">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="All">All</SelectItem>
-                <SelectItem value="Income">Income</SelectItem>
-                <SelectItem value="Expense">Expense</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Date</TableHead>
-                <TableHead>Type</TableHead>
-                <TableHead>Category</TableHead>
-                <TableHead>Description</TableHead>
-                <TableHead className="text-right">Amount</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {transactions.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={5} className="text-center">
-                    No transactions found
-                  </TableCell>
-                </TableRow>
-              ) : (
-                transactions.map((transaction, index) => (
-                  <TableRow key={index}>
-                    <TableCell>{transaction.date.toString()}</TableCell>
-                    <TableCell>{transaction.type}</TableCell>
-                    <TableCell>{transaction.category}</TableCell>
-                    <TableCell>{transaction.description}</TableCell>
-                    <TableCell
-                      className={`text-right ${
-                        transaction.type === "Income"
-                          ? "text-green-600"
-                          : "text-red-600"
-                      }`}
-                    >
-                      ${transaction.amount.toFixed(2)}
-                    </TableCell>
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
+    <div className="container mx-auto py-6">
+      <div className="flex flex-col gap-6">
+        <div className="text-left">
+          <h1 className="text-2xl font-bold">Transactions</h1>
+          <p className="text-muted-foreground">Manage all your organization transactions</p>
         </div>
 
         {/* Add Transaction Section */}
-        <div>
-          <Card>
-            <CardHeader>
-              <CardTitle>Add Transaction</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <Form {...form}>
-                <form
-                  className="space-y-4"
-                  onSubmit={form.handleSubmit(onSubmit)}
-                >
+        <Card>
+          <CardHeader>
+            <CardTitle>Add Transaction</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Form {...form}>
+              <form
+                className="space-y-4"
+                onSubmit={form.handleSubmit(onSubmit)}
+              >
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   {/* Transaction Type Field */}
                   <FormField
                     control={form.control}
@@ -185,24 +128,9 @@ export const TransactionsPage = () => {
                             </SelectTrigger>
                             <SelectContent>
                               <SelectItem value="Expense">Expense</SelectItem>
-                              <SelectItem value="Income">Income</SelectItem>
+                              <SelectItem value="Revenue">Revenue</SelectItem>
                             </SelectContent>
                           </Select>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  {/* Amount Field */}
-                  <FormField
-                    control={form.control}
-                    name="amount"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Amount</FormLabel>
-                        <FormControl>
-                          <Input {...field} type="number" placeholder="0" />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -242,31 +170,104 @@ export const TransactionsPage = () => {
                     )}
                   />
 
-                  {/* Description Field */}
+                  {/* Amount Field */}
                   <FormField
                     control={form.control}
-                    name="description"
+                    name="amount"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Description</FormLabel>
+                        <FormLabel>Amount</FormLabel>
                         <FormControl>
-                          <Input {...field} />
+                          <Input {...field} type="number" placeholder="0" />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
+                </div>
 
+                {/* Description Field */}
+                <FormField
+                  control={form.control}
+                  name="description"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Description</FormLabel>
+                      <FormControl>
+                        <Input {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <div className="flex justify-end">
                   <Button
                     type="submit"
-                    className="w-full bg-green-700 hover:bg-green-800"
+                    className="bg-green-700 hover:bg-green-800"
                   >
                     Add Transaction
                   </Button>
-                </form>
-              </Form>
-            </CardContent>
-          </Card>
+                </div>
+              </form>
+            </Form>
+          </CardContent>
+        </Card>
+
+        {/* Transaction History Section */}
+        <div>
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-xl font-medium">Transaction History</h3>
+            <Select value="All" onValueChange={() => {}}>
+              <SelectTrigger className="w-24">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="All">All</SelectItem>
+                <SelectItem value="Revenue">Revenue</SelectItem>
+                <SelectItem value="Expense">Expense</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Date</TableHead>
+                <TableHead>Type</TableHead>
+                <TableHead>Category</TableHead>
+                <TableHead>Description</TableHead>
+                <TableHead className="text-right">Amount</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {transactions.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={5} className="text-left">
+                    No transactions found
+                  </TableCell>
+                </TableRow>
+              ) : (
+                transactions.map((transaction, index) => (
+                  <TableRow key={index}>
+                    <TableCell className="text-left">{transaction.date.toString()}</TableCell>
+                    <TableCell className="text-left">{transaction.type}</TableCell>
+                    <TableCell className="text-left">{transaction.category}</TableCell>
+                    <TableCell className="text-left">{transaction.description}</TableCell>
+                    <TableCell
+                      className={`text-right ${
+                        transaction.type === "Revenue"
+                          ? "text-green-600"
+                          : "text-red-600"
+                      }`}
+                    >
+                      ${transaction.amount.toFixed(2)}
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
         </div>
       </div>
     </div>

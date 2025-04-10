@@ -196,223 +196,227 @@ export const FeesPage = () => {
           <p className="text-muted-foreground">Manage your organization fees</p>
         </div>
 
-        <div className="flex flex-col lg:flex-row gap-6">
-          {/* Fees List Section */}
-          <div className="w-full lg:flex-1">
-            <div className="text-left mb-4">
-              <h2 className="text-lg font-semibold">Fee List</h2>
+        {/* Add Fee Form Section */}
+        <Card className="p-6">
+          <div className="text-center mb-4">
+            <h2 className="font-semibold">Add New Fee</h2>
+            <p className="text-muted-foreground mt-1">Create a new fee for your organization</p>
+          </div>
+          <form onSubmit={handleAddFee} className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div>
+                <Label htmlFor="name" className="font-medium">Fee Name</Label>
+                <Input
+                  id="name"
+                  name="name"
+                  type="text"
+                  placeholder="Fee name"
+                  required
+                  className="mt-1.5 h-12 bg-white"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="amount" className="font-medium">Amount</Label>
+                <Input
+                  id="amount"
+                  name="amount"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  placeholder="Amount"
+                  required
+                  className="mt-1.5 h-12 bg-white"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="dueDate" className="font-medium">Due Date</Label>
+                <Input 
+                  id="dueDate" 
+                  name="dueDate" 
+                  type="date" 
+                  required 
+                  placeholder="mm/dd/yyyy"
+                  className="mt-1.5 h-12 bg-white"
+                />
+              </div>
             </div>
-            <div className="rounded-md border overflow-x-auto">
-              <div className="min-w-[600px] lg:min-w-0">
-                {/* Table Header */}
-                <div className="grid grid-cols-5 gap-4 p-4 bg-muted/50 font-medium">
-                  <div>Name</div>
-                  <div>Amount</div>
-                  <div>Due Date</div>
-                  <div>Assigned To</div>
-                  <div>Actions</div>
-                </div>
-                {/* Table Body */}
-                <div className="divide-y">
-                  {fees.map((fee) => (
-                    <div
-                      key={fee.id}
-                      className="grid grid-cols-5 gap-4 p-4 items-center hover:bg-muted/50"
-                    >
-                      <div className="font-medium">{fee.name}</div>
-                      <div className="text-blue-600 font-medium">
-                        ${fee.amount}
-                      </div>
-                      <div>{new Date(fee.dueDate).toLocaleDateString()}</div>
-                      <div>{fee.memberIds?.length || 0} members</div>
-                      <div>
-                        <button
-                          onClick={() =>
-                            setSelectedFee(
-                              selectedFee === fee.id ? "" : fee.id || ""
-                            )
-                          }
-                          className="px-3 py-1.5 text-sm bg-secondary text-secondary-foreground rounded-md hover:bg-secondary/80"
-                        >
-                          {selectedFee === fee.id
-                            ? "Hide Details"
-                            : "View Details"}
-                        </button>
-                      </div>
+
+            <div>
+              <div className="flex items-center space-x-2 mb-2">
+                <input
+                  type="checkbox"
+                  id="assignToAll"
+                  className="h-4 w-4 rounded border-gray-300"
+                  checked={assignToAll}
+                  onChange={(e) => setAssignToAll(e.target.checked)}
+                />
+                <Label htmlFor="assignToAll" className="font-medium">Assign to all members</Label>
+              </div>
+
+              {!assignToAll && (
+                <div className="border rounded-lg p-4 bg-white">
+                  {members.length === 0 ? (
+                    <div className="text-center text-muted-foreground py-2">
+                      No members available
                     </div>
-                  ))}
-                  {fees.length === 0 && (
-                    <div className="p-4 text-center text-muted-foreground">
-                      No fees found
+                  ) : (
+                    <div className="space-y-2">
+                      {members.map((member) => (
+                        <div
+                          key={member.id}
+                          className="flex items-center space-x-2"
+                        >
+                          <input
+                            type="checkbox"
+                            id={`member-${member.id}`}
+                            name="memberIds"
+                            value={member.id}
+                            className="h-4 w-4 rounded border-gray-300"
+                          />
+                          <Label htmlFor={`member-${member.id}`} className="font-medium">
+                            {member.name}
+                          </Label>
+                        </div>
+                      ))}
                     </div>
                   )}
                 </div>
-              </div>
+              )}
             </div>
 
-            {/* Fee Details Section - Shows when a fee is selected */}
-            {selectedFee && assignments[selectedFee] && (
-              <div className="mt-4">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Payment Details</CardTitle>
-                    <CardDescription>
-                      View and manage payments for this fee
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                      {assignments[selectedFee].map((assignment) => {
-                        const member = members.find(
-                          (m) => m.id === assignment.memberId
-                        );
-                        return (
-                          <div
-                            key={assignment.id}
-                            className={`p-4 rounded-lg ${
-                              assignment.isPaid
-                                ? "bg-green-50 border border-green-200"
-                                : "bg-gray-50 border border-gray-200"
-                            }`}
-                          >
-                            <div className="font-medium">{member?.name}</div>
-                            <div className="text-sm text-muted-foreground">
-                              {assignment.isPaid ? (
-                                <>
-                                  <div>
-                                    Paid on{" "}
-                                    {assignment.paidDate?.toLocaleDateString()}
-                                  </div>
-                                  {assignment.paymentMethod && (
-                                    <div>
-                                      Method:{" "}
-                                      {assignment.paymentMethod.replace(
-                                        "_",
-                                        " "
-                                      )}
-                                    </div>
-                                  )}
-                                  {assignment.notes && (
-                                    <div>Notes: {assignment.notes}</div>
-                                  )}
-                                </>
-                              ) : (
-                                "Not paid"
-                              )}
-                            </div>
-                            {!assignment.isPaid && (
-                              <button
-                                onClick={() =>
-                                  handlePayFee(
-                                    assignment,
-                                    fees.find((f) => f.id === selectedFee)!
-                                  )
-                                }
-                                className="mt-2 w-full px-3 py-2 bg-primary text-primary-foreground text-sm rounded-md hover:bg-primary/90"
-                              >
-                                Mark as Paid
-                              </button>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-            )}
+            <div className="flex justify-end">
+              <Button
+                type="submit"
+                className="h-9 px-6 bg-[#2B8A3E] hover:bg-[#2B8A3E]/90 text-white rounded-[10px] text-sm font-medium"
+                disabled={isLoading}
+              >
+                {isLoading ? "Adding..." : "Add Fee"}
+              </Button>
+            </div>
+          </form>
+        </Card>
+
+        {/* Fees List Section */}
+        <div className="w-full">
+          <div className="text-left mb-4">
+            <h2 className="text-lg font-semibold">Fee List</h2>
           </div>
-
-          {/* Add Fee Form Section */}
-          <Card className="w-full lg:w-[400px]">
-            <CardHeader>
-              <CardTitle>Add New Fee</CardTitle>
-              <CardDescription>
-                Create a new fee for your organization
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleAddFee} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="name">Fee Name</Label>
-                  <Input
-                    id="name"
-                    name="name"
-                    type="text"
-                    placeholder="Fee name"
-                    required
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="amount">Amount</Label>
-                  <Input
-                    id="amount"
-                    name="amount"
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    placeholder="Amount"
-                    required
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="dueDate">Due Date</Label>
-                  <Input id="dueDate" name="dueDate" type="date" required />
-                </div>
-
-                <div className="flex items-center space-x-2">
-                  <input
-                    type="checkbox"
-                    id="assignToAll"
-                    className="h-4 w-4 rounded border-gray-300"
-                    checked={assignToAll}
-                    onChange={(e) => setAssignToAll(e.target.checked)}
-                  />
-                  <Label htmlFor="assignToAll">Assign to all members</Label>
-                </div>
-
-                {!assignToAll && (
-                  <div className="border rounded-md p-4 max-h-[200px] overflow-y-auto">
-                    {members.length === 0 ? (
-                      <div className="text-center text-muted-foreground py-2">
-                        No members available
-                      </div>
-                    ) : (
-                      <div className="space-y-2">
-                        {members.map((member) => (
-                          <div
-                            key={member.id}
-                            className="flex items-center space-x-2"
-                          >
-                            <input
-                              type="checkbox"
-                              id={`member-${member.id}`}
-                              name="memberIds"
-                              value={member.id}
-                              className="h-4 w-4 rounded border-gray-300"
-                            />
-                            <Label htmlFor={`member-${member.id}`}>
-                              {member.name}
-                            </Label>
-                          </div>
-                        ))}
-                      </div>
-                    )}
+          <div className="rounded-md border overflow-x-auto">
+            <div className="min-w-[600px] lg:min-w-0">
+              {/* Table Header */}
+              <div className="grid grid-cols-5 gap-4 p-4 bg-muted/50 font-medium">
+                <div>Name</div>
+                <div>Amount</div>
+                <div>Due Date</div>
+                <div>Assigned To</div>
+                <div>Actions</div>
+              </div>
+              {/* Table Body */}
+              <div className="divide-y">
+                {fees.map((fee) => (
+                  <div
+                    key={fee.id}
+                    className="grid grid-cols-5 gap-4 p-4 items-center hover:bg-muted/50"
+                  >
+                    <div className="font-medium">{fee.name}</div>
+                    <div className="text-blue-600 font-medium">
+                      ${fee.amount}
+                    </div>
+                    <div>{new Date(fee.dueDate).toLocaleDateString()}</div>
+                    <div>{fee.memberIds?.length || 0} members</div>
+                    <div>
+                      <button
+                        onClick={() =>
+                          setSelectedFee(
+                            selectedFee === fee.id ? "" : fee.id || ""
+                          )
+                        }
+                        className="px-3 py-1.5 text-sm bg-secondary text-secondary-foreground rounded-md hover:bg-secondary/80"
+                      >
+                        {selectedFee === fee.id ? "Hide Details" : "View Details"}
+                      </button>
+                    </div>
+                  </div>
+                ))}
+                {fees.length === 0 && (
+                  <div className="p-4 text-center text-muted-foreground">
+                    No fees found
                   </div>
                 )}
+              </div>
+            </div>
+          </div>
 
-                <Button
-                  type="submit"
-                  className="w-full bg-[#2B8A3E] hover:bg-[#2B8A3E]/90 text-white"
-                  disabled={isLoading}
-                >
-                  {isLoading ? "Adding..." : "Add Fee"}
-                </Button>
-              </form>
-            </CardContent>
-          </Card>
+          {/* Fee Details Section - Shows when a fee is selected */}
+          {selectedFee && assignments[selectedFee] && (
+            <div className="mt-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Payment Details</CardTitle>
+                  <CardDescription>
+                    View and manage payments for this fee
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                    {assignments[selectedFee].map((assignment) => {
+                      const member = members.find(
+                        (m) => m.id === assignment.memberId
+                      );
+                      return (
+                        <div
+                          key={assignment.id}
+                          className={`p-4 rounded-lg ${
+                            assignment.isPaid
+                              ? "bg-green-50 border border-green-200"
+                              : "bg-gray-50 border border-gray-200"
+                          }`}
+                        >
+                          <div className="font-medium">{member?.name}</div>
+                          <div className="text-sm text-muted-foreground">
+                            {assignment.isPaid ? (
+                              <>
+                                <div>
+                                  Paid on{" "}
+                                  {assignment.paidDate?.toLocaleDateString()}
+                                </div>
+                                {assignment.paymentMethod && (
+                                  <div>
+                                    Method:{" "}
+                                    {assignment.paymentMethod.replace("_", " ")}
+                                  </div>
+                                )}
+                                {assignment.notes && (
+                                  <div>Notes: {assignment.notes}</div>
+                                )}
+                              </>
+                            ) : (
+                              "Not paid"
+                            )}
+                          </div>
+                          {!assignment.isPaid && (
+                            <button
+                              onClick={() =>
+                                handlePayFee(
+                                  assignment,
+                                  fees.find((f) => f.id === selectedFee)!
+                                )
+                              }
+                              className="mt-2 w-full px-3 py-2 bg-primary text-primary-foreground text-sm rounded-md hover:bg-primary/90"
+                            >
+                              Mark as Paid
+                            </button>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          )}
         </div>
       </div>
 
