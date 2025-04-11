@@ -1,4 +1,4 @@
-import { collection, addDoc, getDocs, query, where, doc, getDoc, Timestamp, updateDoc, onSnapshot } from 'firebase/firestore';
+import { collection, addDoc, getDocs, query, where, doc, getDoc, Timestamp, updateDoc, onSnapshot, deleteDoc } from 'firebase/firestore';
 import { db } from '../firebase';
 import type { Member, Organization, Fee, FeeAssignment, Transaction } from '@shared/types';
 import { InsertMember, InsertTransaction } from '@shared/schema';
@@ -52,6 +52,26 @@ export const dbService = {
     } catch (error) {
       console.error('Error getting members:', error);
       return [];
+    }
+  },
+
+  async deleteMember(memberId: string): Promise<void> {
+    try {
+      const memberRef = doc(db, 'members', memberId);
+      await deleteDoc(memberRef);
+    } catch (error) {
+      console.error('Error deleting member:', error);
+      throw new Error('Failed to delete member');
+    }
+  },
+
+  async updateMember(memberId: string, data: Partial<InsertMember>): Promise<void> {
+    try {
+      const memberRef = doc(db, 'members', memberId);
+      await updateDoc(memberRef, data);
+    } catch (error) {
+      console.error('Error updating member:', error);
+      throw new Error('Failed to update member');
     }
   },
 

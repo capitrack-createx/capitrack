@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
-import { Loader2, Plus } from "lucide-react";
+import { Loader2, Plus, Trash2, Pencil, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -21,10 +21,13 @@ import { useOrganization } from "@/context/OrganizationContext";
 import { InsertMember, InsertMemberSchema } from "@shared/schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export function MembersPage() {
   const [members, setMembers] = useState<Member[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [editingMemberId, setEditingMemberId] = useState<string | null>(null);
+  const [editingMemberData, setEditingMemberData] = useState<Partial<InsertMember> | null>(null);
   const { user } = useAuth();
   const { organization } = useOrganization();
 
@@ -54,19 +57,52 @@ export function MembersPage() {
     if (!user || !organization) return;
     setIsLoading(true);
     try {
-      dbService
-        .addMember(data)
-        .then(() => {
-          form.reset();
-          loadMembers();
-        })
-        .catch((error: Error) => {
-          toast.error(error.message);
-        });
+      await dbService.addMember(data);
+      form.reset();
+      loadMembers();
+      toast.success("Member added successfully");
     } catch (error) {
-      console.error("Error adding member:", error);
+      toast.error("Failed to add member");
     }
     setIsLoading(false);
+  };
+
+  const deleteMember = async (memberId: string) => {
+    if (!user || !organization) return;
+    try {
+      await dbService.deleteMember(memberId);
+      loadMembers();
+      toast.success("Member deleted successfully");
+    } catch (error) {
+      toast.error("Failed to delete member");
+    }
+  };
+
+  const startEditing = (member: Member) => {
+    setEditingMemberId(member.id);
+    setEditingMemberData({
+      name: member.name,
+      email: member.email,
+      phoneNumber: member.phoneNumber,
+      role: member.role.toUpperCase() as 'ADMIN' | 'MEMBER'
+    });
+  };
+
+  const cancelEditing = () => {
+    setEditingMemberId(null);
+    setEditingMemberData(null);
+  };
+
+  const handleEdit = async (memberId: string, data: Partial<InsertMember>) => {
+    if (!user || !organization) return;
+    try {
+      await dbService.updateMember(memberId, data);
+      loadMembers();
+      cancelEditing();
+      toast.success("Member updated successfully");
+    } catch (error) {
+      toast.error("Failed to update member");
+    }
   };
 
   return (
@@ -84,10 +120,7 @@ export function MembersPage() {
             <p className="text-muted-foreground mt-1">Add a new member to your organization</p>
           </div>
           <Form {...form}>
-            <form
-              onSubmit={form.handleSubmit(onSubmit)}
-              className="space-y-6"
-            >
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <FormField
                   control={form.control}
@@ -168,8 +201,8 @@ export function MembersPage() {
                 <div>Name</div>
                 <div>Email</div>
                 <div>Phone</div>
-                <div>Join Date</div>
-                <div>Status</div>
+                <div>Role</div>
+                <div>Actions</div>
               </div>
               <div className="divide-y">
                 {members.map((member) => (
@@ -177,18 +210,99 @@ export function MembersPage() {
                     key={member.id}
                     className="grid grid-cols-5 gap-4 p-4 items-center hover:bg-muted/50"
                   >
-                    <div className="truncate">{member.name || "-"}</div>
-                    <div className="truncate">{member.email || "-"}</div>
-                    <div className="truncate">{member.phoneNumber || "-"}</div>
-                    <div>
-                      {member.createdAt
-                        ? member.createdAt.toDate().toISOString().split("T")[0]
-                        : "-"}
+                    <div className="truncate">
+                      {editingMemberId === member.id ? (
+                        <Input
+                          defaultValue={member.name}
+                          onBlur={(e: React.FocusEvent<HTMLInputElement>) => handleEdit(member.id, { name: e.target.value })}
+                          onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
+                            if (e.key === 'Enter') {
+                              e.currentTarget.blur();
+                            }
+                          }}
+                          className="w-full"
+                        />
+                      ) : (
+                        <span onClick={() => startEditing(member)}>{member.name}</span>
+                      )}
                     </div>
-                    <div>
-                      <span className="inline-flex items-center rounded-full px-2 py-1 text-xs font-medium bg-green-50 text-green-700 ring-1 ring-inset ring-green-600/20">
-                        Active
-                      </span>
+                    <div className="truncate">
+                      {editingMemberId === member.id ? (
+                        <Input
+                          defaultValue={member.email}
+                          onBlur={(e: React.FocusEvent<HTMLInputElement>) => handleEdit(member.id, { email: e.target.value })}
+                          onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
+                            if (e.key === 'Enter') {
+                              e.currentTarget.blur();
+                            }
+                          }}
+                          className="w-full"
+                        />
+                      ) : (
+                        <span onClick={() => startEditing(member)}>{member.email}</span>
+                      )}
+                    </div>
+                    <div className="truncate">
+                      {editingMemberId === member.id ? (
+                        <Input
+                          defaultValue={member.phoneNumber}
+                          onBlur={(e: React.FocusEvent<HTMLInputElement>) => handleEdit(member.id, { phoneNumber: e.target.value })}
+                          onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
+                            if (e.key === 'Enter') {
+                              e.currentTarget.blur();
+                            }
+                          }}
+                          className="w-full"
+                        />
+                      ) : (
+                        <span onClick={() => startEditing(member)}>{member.phoneNumber}</span>
+                      )}
+                    </div>
+                    <div className="truncate">
+                      {editingMemberId === member.id ? (
+                        <Select
+                          defaultValue={member.role as 'ADMIN' | 'MEMBER'}
+                          onValueChange={(value: 'ADMIN' | 'MEMBER') => handleEdit(member.id, { role: value })}
+                        >
+                          <SelectTrigger className="w-full">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="ADMIN">Admin</SelectItem>
+                            <SelectItem value="MEMBER">Member</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      ) : (
+                        <span onClick={() => startEditing(member)}>
+  {member.role.charAt(0).toUpperCase() + member.role.slice(1).toLowerCase()}
+</span>
+                      )}
+                    </div>
+                    <div className="flex items-center justify-center gap-2">
+                      {editingMemberId === member.id ? (
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          onClick={cancelEditing}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      ) : (
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          onClick={() => startEditing(member)}
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                      )}
+                      <Button
+                        variant="destructive"
+                        size="icon"
+                        onClick={() => deleteMember(member.id)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
                     </div>
                   </div>
                 ))}
