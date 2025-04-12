@@ -18,7 +18,7 @@ export const InsertUserSchema = z.object({
 export const RoleEnum = z.enum(["owner", "admin", "member"]);
 
 export const FeeSchema = z.object({
-  id: z.string().optional(),
+  id: z.string(),
   name: z.string().min(2, { message: "Fee name must be at least 2 characters." }),
   amount: z.number().min(0, { message: "Amount must be greater than 0" }),
   dueDate: z.date(),

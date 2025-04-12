@@ -13,6 +13,9 @@ export class ValidationError extends Error {
     this.name = "ValidationError";
   }
 }
+type FeeUpdateData = Partial<Fee> & {
+  dueDate?: Date | Timestamp;
+};
 
 export const dbService = {
   // Members
@@ -183,6 +186,39 @@ export const dbService = {
     } catch (error) {
       console.error('Error getting fees:', error);
       return [];
+    }
+  },
+
+  async deleteFee(feeId: string): Promise<void> {
+    try {
+      // Delete the fee document
+      const feeRef = doc(db, 'fees', feeId);
+      await deleteDoc(feeRef);
+
+      // Delete all associated fee assignments
+      const assignmentsRef = collection(db, 'feeAssignments');
+      const q = query(assignmentsRef, where('feeId', '==', feeId));
+      const snapshot = await getDocs(q);
+      await Promise.all(snapshot.docs.map(doc => deleteDoc(doc.ref)));
+    } catch (error) {
+      console.error('Error deleting fee:', error);
+      throw new Error('Failed to delete fee');
+    }
+  },
+
+
+  async updateFee(feeId: string, data: Partial<Fee>): Promise<void> {
+    try {
+      const feeRef = doc(db, 'fees', feeId);
+      
+      // Create a copy of the data to modify
+      const updateData: Partial<Fee> = { ...data };
+      
+      // Firestore will automatically convert Date to Timestamp
+      await updateDoc(feeRef, updateData);
+    } catch (error) {
+      console.error('Error updating fee:', error);
+      throw new Error('Failed to update fee');
     }
   },
 
