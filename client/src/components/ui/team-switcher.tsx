@@ -1,6 +1,7 @@
 "use client";
 
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, LogOut } from "lucide-react";
+import { useAuth } from "@/services/auth-service";
 
 import {
   DropdownMenu,
@@ -23,9 +24,18 @@ import { useOrganization } from "@/context/OrganizationContext";
 
 export function TeamSwitcher() {
   const { organization } = useOrganization();
+  const { logout } = useAuth();
 
   const [activeTeam, setActiveTeam] = React.useState<Organization>();
   const [teams, setTeams] = React.useState<Organization[]>();
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+    } catch (error) {
+      console.error("Logout failed:", error);
+    }
+  };
 
   useEffect(() => {
     if (organization) {
@@ -77,6 +87,15 @@ export function TeamSwitcher() {
               <></>
             )}
             <DropdownMenuSeparator />
+            <DropdownMenuItem 
+              onClick={handleLogout} 
+              className="gap-2 p-2 text-red-600 cursor-pointer"
+            >
+              <div className="flex size-6 items-center justify-center">
+                <LogOut className="size-4" />
+              </div>
+              <div className="font-medium">Logout</div>
+            </DropdownMenuItem>
             {/* <DropdownMenuItem className="gap-2 p-2">
               <div className="flex size-6 items-center justify-center rounded-md border bg-background">
                 <Plus className="size-4" />
