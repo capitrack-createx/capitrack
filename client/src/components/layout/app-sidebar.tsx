@@ -1,4 +1,4 @@
-import { CreditCard, DollarSign, Users } from "lucide-react";
+import { CreditCard, DollarSign, Users, LayoutDashboard } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -15,11 +15,11 @@ import { TeamSwitcher } from "@/components/ui/team-switcher";
 
 // Menu items.
 const items = [
-  // {
-  //   title: "Dashboard",
-  //   url: "/app/dashboard",
-  //   icon: LayoutDashboard,
-  // },
+  {
+    title: "Dashboard",
+    url: "/app/dashboard",
+    icon: LayoutDashboard,
+  },
   {
     title: "Members",
     url: "/app/members",
