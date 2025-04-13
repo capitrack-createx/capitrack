@@ -293,6 +293,27 @@ export const dbService = {
 
       console.log('Updating fee assignment with:', updateData);
       await updateDoc(docRef, updateData);
+      if (data.isPaid && data.isPaid === true) {
+        const feeAssignmentSnap = await getDoc(docRef);
+        const feeAssignment = feeAssignmentSnap.data() as FeeAssignment;
+        
+        // Get the fee amount
+        const feeRef = doc(db, 'fees', feeAssignment.feeId);
+        const feeSnap = await getDoc(feeRef);
+        const fee = feeSnap.data() as Fee;
+
+        // Create revenue transaction
+        await dbService.createTransactionDocument({
+          type: "Revenue",
+          amount: fee.amount,
+          category: "Membership Fees",
+          description: `Fee payment`,
+          date: data.paidDate?.toISOString().split('T')[0] || new Date().toISOString().split('T')[0],
+          createdAt: new Date(),
+          createdBy: "system",
+          orgId: fee.orgId,
+        });
+      }
     } catch (error) {
       console.error('Error updating fee assignment:', error);
       throw new Error('Failed to update fee assignment');
