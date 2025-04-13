@@ -1,4 +1,4 @@
-import { collection, addDoc, getDocs, query, where, doc, getDoc, Timestamp, updateDoc, onSnapshot } from 'firebase/firestore';
+import { collection, addDoc, getDocs, query, where, doc, getDoc, Timestamp, updateDoc, onSnapshot, deleteDoc } from 'firebase/firestore';
 import { db } from '../firebase';
 import type { Member, Organization, Fee, FeeAssignment, Transaction } from '@shared/types';
 import { InsertMember, InsertTransaction } from '@shared/schema';
@@ -13,6 +13,9 @@ export class ValidationError extends Error {
     this.name = "ValidationError";
   }
 }
+type FeeUpdateData = Partial<Fee> & {
+  dueDate?: Date | Timestamp;
+};
 
 export const dbService = {
   // Members
@@ -52,6 +55,26 @@ export const dbService = {
     } catch (error) {
       console.error('Error getting members:', error);
       return [];
+    }
+  },
+
+  async deleteMember(memberId: string): Promise<void> {
+    try {
+      const memberRef = doc(db, 'members', memberId);
+      await deleteDoc(memberRef);
+    } catch (error) {
+      console.error('Error deleting member:', error);
+      throw new Error('Failed to delete member');
+    }
+  },
+
+  async updateMember(memberId: string, data: Partial<InsertMember>): Promise<void> {
+    try {
+      const memberRef = doc(db, 'members', memberId);
+      await updateDoc(memberRef, data);
+    } catch (error) {
+      console.error('Error updating member:', error);
+      throw new Error('Failed to update member');
     }
   },
 
@@ -166,6 +189,39 @@ export const dbService = {
     }
   },
 
+  async deleteFee(feeId: string): Promise<void> {
+    try {
+      // Delete the fee document
+      const feeRef = doc(db, 'fees', feeId);
+      await deleteDoc(feeRef);
+
+      // Delete all associated fee assignments
+      const assignmentsRef = collection(db, 'feeAssignments');
+      const q = query(assignmentsRef, where('feeId', '==', feeId));
+      const snapshot = await getDocs(q);
+      await Promise.all(snapshot.docs.map(doc => deleteDoc(doc.ref)));
+    } catch (error) {
+      console.error('Error deleting fee:', error);
+      throw new Error('Failed to delete fee');
+    }
+  },
+
+
+  async updateFee(feeId: string, data: Partial<Fee>): Promise<void> {
+    try {
+      const feeRef = doc(db, 'fees', feeId);
+      
+      // Create a copy of the data to modify
+      const updateData: Partial<Fee> = { ...data };
+      
+      // Firestore will automatically convert Date to Timestamp
+      await updateDoc(feeRef, updateData);
+    } catch (error) {
+      console.error('Error updating fee:', error);
+      throw new Error('Failed to update fee');
+    }
+  },
+
   // Fee Assignments
   async createFeeAssignment(data: Omit<FeeAssignment, 'id'>): Promise<FeeAssignment> {
     try {
@@ -237,6 +293,27 @@ export const dbService = {
 
       console.log('Updating fee assignment with:', updateData);
       await updateDoc(docRef, updateData);
+      if (data.isPaid && data.isPaid === true) {
+        const feeAssignmentSnap = await getDoc(docRef);
+        const feeAssignment = feeAssignmentSnap.data() as FeeAssignment;
+        
+        // Get the fee amount
+        const feeRef = doc(db, 'fees', feeAssignment.feeId);
+        const feeSnap = await getDoc(feeRef);
+        const fee = feeSnap.data() as Fee;
+
+        // Create revenue transaction
+        await dbService.createTransactionDocument({
+          type: "Revenue",
+          amount: fee.amount,
+          category: "Membership Fees",
+          description: `Fee payment`,
+          date: data.paidDate?.toISOString().split('T')[0] || new Date().toISOString().split('T')[0],
+          createdAt: new Date(),
+          createdBy: "system",
+          orgId: fee.orgId,
+        });
+      }
     } catch (error) {
       console.error('Error updating fee assignment:', error);
       throw new Error('Failed to update fee assignment');

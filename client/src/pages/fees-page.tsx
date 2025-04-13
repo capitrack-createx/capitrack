@@ -14,6 +14,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useOrganization } from "@/context/OrganizationContext";
+import { toast } from "sonner";
+import { Pencil, Trash2, X } from "lucide-react";
 
 type Member = {
   id: string;
@@ -39,6 +41,8 @@ export const FeesPage = () => {
     fee: Fee;
   } | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [editingFeeId, setEditingFeeId] = useState<string | null>(null);
+  const [editingFeeData, setEditingFeeData] = useState<Partial<Fee> | null>(null);
 
   useEffect(() => {
     if (organization) {
@@ -148,45 +152,42 @@ export const FeesPage = () => {
     form.reset();
   }
 
-  // Component-specific styles that extend shared styles
-  // const componentStyles = {np
-  //   memberList: {
-  //     maxHeight: "200px",
-  //     overflowY: "auto" as const,
-  //     border: "1px solid #ddd",
-  //     borderRadius: "4px",
-  //     padding: "8px",
-  //   },
-  //   memberItem: {
-  //     display: "flex",
-  //     alignItems: "center",
-  //     marginBottom: "4px",
-  //   },
-  //   checkbox: {
-  //     marginRight: "8px",
-  //   },
-  //   feeList: {
-  //     display: "flex",
-  //     flexDirection: "column" as const,
-  //     gap: "16px",
-  //   },
-  //   feeCard: {
-  //     ...styles.card,
-  //     marginBottom: "16px",
-  //   },
-  //   feeHeader: {
-  //     display: "flex",
-  //     justifyContent: "space-between",
-  //     alignItems: "start",
-  //     marginBottom: "8px",
-  //   },
-  //   assignmentCard: (isPaid: boolean) => ({
-  //     padding: "12px",
-  //     borderRadius: "4px",
-  //     background: isPaid ? "#dcfce7" : "#f3f4f6",
-  //     border: `1px solid ${isPaid ? "#bbf7d0" : "#ddd"}`,
-  //   }),
-  // };
+  const deleteFee = async (feeId: string) => {
+    if (!user || !organization) return;
+    try {
+      await dbService.deleteFee(feeId);
+      loadFees();
+      toast.success("Fee deleted successfully");
+    } catch (error) {
+      toast.error("Failed to delete fee");
+    }
+  };
+
+  const startEditing = (fee: Fee) => {
+    setEditingFeeId(fee.id);
+    setEditingFeeData({
+      name: fee.name,
+      amount: fee.amount,
+      dueDate: fee.dueDate,
+    });
+  };
+
+  const cancelEditing = () => {
+    setEditingFeeId(null);
+    setEditingFeeData(null);
+  };
+
+  const handleEdit = async (feeId: string, data: Partial<Fee>) => {
+    if (!user || !organization) return;
+    try {
+      await dbService.updateFee(feeId, data);
+      loadFees();
+      cancelEditing();
+      toast.success("Fee updated successfully");
+    } catch (error) {
+      toast.error("Failed to update fee");
+    }
+  };
 
   return (
     <div className="container mx-auto py-6">
@@ -309,25 +310,90 @@ export const FeesPage = () => {
               <div className="grid grid-cols-5 gap-4 p-4 bg-muted/50 font-medium">
                 <div>Name</div>
                 <div>Amount</div>
-                <div>Due Date</div>
                 <div>Assigned To</div>
+                <div>Due Date</div>
                 <div>Actions</div>
               </div>
-              {/* Table Body */}
-              <div className="divide-y">
+              {/* Fees List */}
+              <div className="space-y-2">
                 {fees.map((fee) => (
-                  <div
-                    key={fee.id}
-                    className="grid grid-cols-5 gap-4 p-4 items-center hover:bg-muted/50"
-                  >
-                    <div className="font-medium">{fee.name}</div>
-                    <div className="text-blue-600 font-medium">
-                      ${fee.amount}
+                  <div key={fee.id} className="grid grid-cols-5 gap-4 p-4 border-b last:border-0">
+                    <div>
+                      {editingFeeId === fee.id ? (
+                        <Input
+                          value={editingFeeData?.name || ""}
+                          onChange={(e) => 
+                            setEditingFeeData((prev) => ({
+                              ...(prev || {}),
+                              name: e.target.value
+                            }))
+                          }
+                        />
+                      ) : fee.name}
                     </div>
-                    <div>{new Date(fee.dueDate).toLocaleDateString()}</div>
+                    <div>
+                      {editingFeeId === fee.id ? (
+                        <Input
+                          type="number"
+                          value={editingFeeData?.amount || ""}
+                          onChange={(e) => 
+                            setEditingFeeData((prev) => ({
+                              ...(prev || {}),
+                              amount: parseFloat(e.target.value)
+                            }))
+                          }
+                        />
+                      ) : `$${fee.amount}`}
+                    </div>
+              
                     <div>{fee.memberIds?.length || 0} members</div>
                     <div>
-                      <button
+                      {editingFeeId === fee.id ? (
+                        <Input
+                          type="date"
+                          value={editingFeeData?.dueDate ? new Date(editingFeeData.dueDate).toISOString().split('T')[0] : ""}
+                          onChange={(e) => 
+                            setEditingFeeData((prev) => ({
+                              ...(prev || {}),
+                              dueDate: new Date(e.target.value)
+                            }))
+                          }
+                        />
+                      ) : new Date(fee.dueDate).toISOString().split('T')[0].replace(/^(\d{4})-(\d{2})-(\d{2})$/, (_, y, m, d) => `${m}/${d}/${y.slice(2)}`)}
+                    </div>
+                    <div className="flex gap-2">
+                      {editingFeeId === fee.id ? (
+                        <>
+                          <Button
+                            variant="destructive"
+                            size="icon"
+                            onClick={() => cancelEditing()}
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            onClick={() => handleEdit(fee.id, editingFeeData!)}
+                          >
+                            Save
+                          </Button>
+                        </>
+                      ) : (
+                        <>
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            onClick={() => startEditing(fee)}
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="destructive"
+                            size="icon"
+                            onClick={() => deleteFee(fee.id)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        <button
                         onClick={() =>
                           setSelectedFee(
                             selectedFee === fee.id ? "" : fee.id || ""
@@ -337,6 +403,8 @@ export const FeesPage = () => {
                       >
                         {selectedFee === fee.id ? "Hide Details" : "View Details"}
                       </button>
+                      </>
+                      )}
                     </div>
                   </div>
                 ))}

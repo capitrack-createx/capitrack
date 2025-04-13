@@ -10,7 +10,7 @@ export interface Member {
     name: string;
     email: string;
     orgId: string; // reference to the organization
-    role: 'ADMIN' | 'MEMBER';
+    role: 'admin' | 'member';
     phoneNumber?: string;
     createdAt?: Timestamp;
   }
