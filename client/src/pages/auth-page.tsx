@@ -59,11 +59,7 @@ export function AuthPage() {
       <div className="relative hidden bg-black lg:block">
         <div className="absolute inset-0 h-full w-full bg-black dark:bg-black/80 flex items-center justify-center">
           <div className="text-center text-white">
-            <img
-              src="/favicon.png"
-              alt="Capitrack Logo"
-              className="w-10 h-10 mx-auto mb-4"
-            />
+            <PiggyBankIcon className="size-4 w-10 h-10 mx-auto mb-4" />
             <h2 className="text-4xl font-bold mb-2">capitrack</h2>
             <p className="text-xl">Keep your organization's finances </p>
             <p className="text-xl">Simple, Quick, and Intuitive</p>
