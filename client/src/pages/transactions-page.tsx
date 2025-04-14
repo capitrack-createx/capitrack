@@ -124,6 +124,44 @@ export const TransactionsPage = () => {
       });
   };
 
+  function generateCsv(data: any[], headers?: string[]): string {
+    if (!data || data.length === 0) {
+      return '';
+    }
+
+    const csvRows = [];
+
+    if (headers) {
+      csvRows.push(headers.join(','));
+    } else if (data.length > 0) {
+      const firstItem = data[0];
+      if (typeof firstItem === 'object' && firstItem !== null) {
+            csvRows.push("description,category,amount,date");
+      }
+    }
+
+    for (const item of data) {
+        if (typeof item === 'object' && item !== null) {
+            csvRows.push(item.description + "," + item.category + "," + item.amount.toFixed(2) * (item.type === 'Income'? 1: -1) + "," + item.date.toString());
+        } else {
+            csvRows.push(String(item));
+        }
+    }
+    return csvRows.join('\n');
+  }
+
+  function downloadCsv(csvString: string, filename: string = 'data.csv'): void {
+    const blob = new Blob([csvString], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
   return (
     <div className="container mx-auto py-6">
       <div className="flex flex-col gap-6">
@@ -237,7 +275,7 @@ export const TransactionsPage = () => {
                 />
 
                 {/* Hidden Receipt URL Field registered with useForm */}
-                <input type="hidden" {...form.register("receiptUrl")} />
+                <input type="hidden" {...form.register("receiptURL")} />
 
                 <FormItem>
                   <FormLabel htmlFor="picture">
@@ -258,6 +296,16 @@ export const TransactionsPage = () => {
                 </FormItem>
 
                 <div className="flex justify-end">
+                  <Button
+                    className="bg-green-700 hover:bg-green-800 padding:200"
+                    type="button"
+                    onClick={() => {
+                      downloadCsv(generateCsv(transactions), organization?.name + " Transactions");
+                    }}
+                  >
+                    Download CSV
+                  </Button>
+                  <div className="w-5"></div>
                   <Button
                     disabled={isUploading}
                     type="submit"
