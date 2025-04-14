@@ -11,23 +11,27 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import {
-  Card
-} from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Member } from "@shared/types";
 import { dbService } from "@/services/db-service";
 import { useAuth } from "@/services/auth-service";
 import { useOrganization } from "@/context/OrganizationContext";
-import { InsertMember, InsertMemberSchema, RoleEnum } from "@shared/schema";
+import { InsertMember, InsertMemberSchema } from "@shared/schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export function MembersPage() {
   const [members, setMembers] = useState<Member[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [editingMemberId, setEditingMemberId] = useState<string | null>(null);
-  const [editingMemberData, setEditingMemberData] = useState<Partial<InsertMember> | null>(null);
+  const [, setEditingMemberData] = useState<Partial<InsertMember> | null>(null);
   const { user } = useAuth();
   const { organization } = useOrganization();
 
@@ -84,7 +88,7 @@ export function MembersPage() {
       name: member.name,
       email: member.email,
       phoneNumber: member.phoneNumber,
-      role: member.role.toUpperCase() as 'ADMIN' | 'MEMBER'
+      role: member.role.toUpperCase() as "ADMIN" | "MEMBER",
     });
   };
 
@@ -117,7 +121,9 @@ export function MembersPage() {
         <Card className="p-6">
           <div className="text-center mb-4">
             <h2 className="font-semibold">Add New Member</h2>
-            <p className="text-muted-foreground mt-1">Add a new member to your organization</p>
+            <p className="text-muted-foreground mt-1">
+              Add a new member to your organization
+            </p>
           </div>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
@@ -129,7 +135,11 @@ export function MembersPage() {
                     <FormItem>
                       <FormLabel className="font-medium">Name</FormLabel>
                       <FormControl>
-                        <Input placeholder="John Doe" className="mt-1.5 h-12 bg-white" {...field} />
+                        <Input
+                          placeholder="John Doe"
+                          className="mt-1.5 h-12 bg-white"
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -158,7 +168,9 @@ export function MembersPage() {
                   name="phoneNumber"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="font-medium">Phone Number</FormLabel>
+                      <FormLabel className="font-medium">
+                        Phone Number
+                      </FormLabel>
                       <FormControl>
                         <Input
                           type="tel"
@@ -185,9 +197,16 @@ export function MembersPage() {
 
                         reader.onload = async (event) => {
                           const csvContent = event.target?.result as string;
-                          const rows = csvContent.split("\n").map(row => row.trim()).filter(row => row);
+                          const rows = csvContent
+                            .split("\n")
+                            .map((row) => row.trim())
+                            .filter((row) => row);
 
-                          const headers = rows.shift()?.split(",").map(header => header.trim()) || [];
+                          const headers =
+                            rows
+                              .shift()
+                              ?.split(",")
+                              .map((header) => header.trim()) || [];
 
                           if (headers.length === 0) {
                             toast.error("Invalid CSV: Missing headers");
@@ -197,41 +216,77 @@ export function MembersPage() {
                           let importedCount = 0;
 
                           for (const row of rows) {
-                            const columns = row.split(",").map(column => column.trim());
+                            const columns = row
+                              .split(",")
+                              .map((column) => column.trim());
 
                             const dataMem: InsertMember = {
                               email: columns[headers.indexOf("email")] || "",
                               name: columns[headers.indexOf("name")] || "",
-                              role: columns[headers.indexOf("role")]?.toUpperCase() === "ADMIN" ? "ADMIN" : "MEMBER",
+                              role:
+                                columns[
+                                  headers.indexOf("role")
+                                ]?.toUpperCase() === "ADMIN"
+                                  ? "ADMIN"
+                                  : "MEMBER",
                               orgId: String(organization?.id),
                               createdAt: new Date(),
-                              phoneNumber: columns[headers.indexOf("phoneNumber")]? columns[headers.indexOf("phoneNumber")]: undefined,
+                              phoneNumber: columns[
+                                headers.indexOf("phoneNumber")
+                              ]
+                                ? columns[headers.indexOf("phoneNumber")]
+                                : undefined,
                             };
 
-                            toast.error(dataMem.email + " " + dataMem.name + dataMem.role + " " + dataMem.phoneNumber);
+                            toast.error(
+                              dataMem.email +
+                                " " +
+                                dataMem.name +
+                                dataMem.role +
+                                " " +
+                                dataMem.phoneNumber
+                            );
 
-                            if (!dataMem.name || !dataMem.email || !dataMem.phoneNumber) {
-                              toast.error(`Invalid row: Missing required fields: ` + dataMem);
+                            if (
+                              !dataMem.name ||
+                              !dataMem.email ||
+                              !dataMem.phoneNumber
+                            ) {
+                              toast.error(
+                                `Invalid row: Missing required fields: ` +
+                                  dataMem
+                              );
                               continue;
                             }
 
                             try {
-                              const validation = InsertMemberSchema.safeParse(dataMem);
+                              const validation =
+                                InsertMemberSchema.safeParse(dataMem);
                               if (!validation.success) {
-                                toast.error(`Invalid row for ${dataMem.email || "missing email"}`);
+                                toast.error(
+                                  `Invalid row for ${
+                                    dataMem.email || "missing email"
+                                  }`
+                                );
                                 continue;
                               }
 
                               await dbService.addMember(dataMem);
                               importedCount++;
                             } catch (err) {
-                              console.error("Failed to add member", dataMem.email, err);
+                              console.error(
+                                "Failed to add member",
+                                dataMem.email,
+                                err
+                              );
                             }
                           }
 
                           loadMembers();
                           form.reset();
-                          toast.success(`Successfully imported ${importedCount} member(s)`);
+                          toast.success(
+                            `Successfully imported ${importedCount} member(s)`
+                          );
                         };
 
                         reader.readAsText(e.target.files[0]);
@@ -287,55 +342,77 @@ export function MembersPage() {
                       {editingMemberId === member.id ? (
                         <Input
                           defaultValue={member.name}
-                          onBlur={(e: React.FocusEvent<HTMLInputElement>) => handleEdit(member.id, { name: e.target.value })}
-                          onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
-                            if (e.key === 'Enter') {
+                          onBlur={(e: React.FocusEvent<HTMLInputElement>) =>
+                            handleEdit(member.id, { name: e.target.value })
+                          }
+                          onKeyDown={(
+                            e: React.KeyboardEvent<HTMLInputElement>
+                          ) => {
+                            if (e.key === "Enter") {
                               e.currentTarget.blur();
                             }
                           }}
                           className="w-full"
                         />
                       ) : (
-                        <span onClick={() => startEditing(member)}>{member.name}</span>
+                        <span onClick={() => startEditing(member)}>
+                          {member.name}
+                        </span>
                       )}
                     </div>
                     <div className="truncate">
                       {editingMemberId === member.id ? (
                         <Input
                           defaultValue={member.email}
-                          onBlur={(e: React.FocusEvent<HTMLInputElement>) => handleEdit(member.id, { email: e.target.value })}
-                          onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
-                            if (e.key === 'Enter') {
+                          onBlur={(e: React.FocusEvent<HTMLInputElement>) =>
+                            handleEdit(member.id, { email: e.target.value })
+                          }
+                          onKeyDown={(
+                            e: React.KeyboardEvent<HTMLInputElement>
+                          ) => {
+                            if (e.key === "Enter") {
                               e.currentTarget.blur();
                             }
                           }}
                           className="w-full"
                         />
                       ) : (
-                        <span onClick={() => startEditing(member)}>{member.email}</span>
+                        <span onClick={() => startEditing(member)}>
+                          {member.email}
+                        </span>
                       )}
                     </div>
                     <div className="truncate">
                       {editingMemberId === member.id ? (
                         <Input
                           defaultValue={member.phoneNumber}
-                          onBlur={(e: React.FocusEvent<HTMLInputElement>) => handleEdit(member.id, { phoneNumber: e.target.value })}
-                          onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
-                            if (e.key === 'Enter') {
+                          onBlur={(e: React.FocusEvent<HTMLInputElement>) =>
+                            handleEdit(member.id, {
+                              phoneNumber: e.target.value,
+                            })
+                          }
+                          onKeyDown={(
+                            e: React.KeyboardEvent<HTMLInputElement>
+                          ) => {
+                            if (e.key === "Enter") {
                               e.currentTarget.blur();
                             }
                           }}
                           className="w-full"
                         />
                       ) : (
-                        <span onClick={() => startEditing(member)}>{member.phoneNumber}</span>
+                        <span onClick={() => startEditing(member)}>
+                          {member.phoneNumber}
+                        </span>
                       )}
                     </div>
                     <div className="truncate">
                       {editingMemberId === member.id ? (
                         <Select
-                          defaultValue={member.role as 'ADMIN' | 'MEMBER'}
-                          onValueChange={(value: 'ADMIN' | 'MEMBER') => handleEdit(member.id, { role: value })}
+                          defaultValue={member.role as "ADMIN" | "MEMBER"}
+                          onValueChange={(value: "ADMIN" | "MEMBER") =>
+                            handleEdit(member.id, { role: value })
+                          }
                         >
                           <SelectTrigger className="w-full">
                             <SelectValue />
@@ -347,8 +424,9 @@ export function MembersPage() {
                         </Select>
                       ) : (
                         <span onClick={() => startEditing(member)}>
-  {member.role.charAt(0).toUpperCase() + member.role.slice(1).toLowerCase()}
-</span>
+                          {member.role.charAt(0).toUpperCase() +
+                            member.role.slice(1).toLowerCase()}
+                        </span>
                       )}
                     </div>
                     <div className="flex items-center justify-center gap-2">

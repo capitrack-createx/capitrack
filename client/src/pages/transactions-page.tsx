@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -82,14 +82,14 @@ export const TransactionsPage = () => {
     }
     setIsUploading(true);
 
-    let receiptUrl = data.receiptURL; // Initially an empty string.
+    let receiptURL = data.receiptURL; // Initially an empty string.
 
     // 1. Upload the file if present
     if (uploadFile) {
       try {
-        receiptUrl = await uploadReceipt(uploadFile);
+        receiptURL = await uploadReceipt(uploadFile);
         // Update the hidden form field so it can be validated
-        form.setValue("receiptURL", receiptUrl);
+        form.setValue("receiptURL", receiptURL);
       } catch (error) {
         console.error("Error uploading receipt:", error);
         return;
@@ -108,7 +108,7 @@ export const TransactionsPage = () => {
       createdBy: user.uid,
       createdAt: new Date(),
       orgId: organization.id,
-      receiptURL: receiptUrl,
+      receiptURL: receiptURL,
     };
     dbService
       .createTransactionDocument(newTransactionRecord)

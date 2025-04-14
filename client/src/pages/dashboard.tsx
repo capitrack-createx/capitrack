@@ -1,30 +1,46 @@
-import React, { useEffect, useState, useMemo } from 'react';
-import { 
-  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
-  PieChart, Pie, Cell, BarChart, Bar 
-} from 'recharts';
+import { useEffect, useState, useMemo } from "react";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+} from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { dbService } from '@/services/db-service';
-import { Transaction, FeeAssignment } from '@shared/types';
-import { useOrganization } from '@/context/OrganizationContext';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { dbService } from "@/services/db-service";
+import { Transaction, FeeAssignment } from "@shared/types";
+import { useOrganization } from "@/context/OrganizationContext";
 
-const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8']; // for charts
+const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884d8"]; // for charts
 
 export function Dashboard() {
   const { organization } = useOrganization();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [feeAssignments, setFeeAssignments] = useState<FeeAssignment[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  
-  const { 
-    totalRevenue, 
-    totalExpenses, 
+
+  const {
+    totalRevenue,
+    totalExpenses,
     balance,
     revenueByMonth,
     expensesByCategory,
     feeStatus,
-    recentTransactions
+    recentTransactions,
   } = useMemo(() => {
     let totalRevenue = 0;
     let totalExpenses = 0;
@@ -32,46 +48,53 @@ export function Dashboard() {
     const expensesByCategoryMap = new Map<string, number>();
     let paid = 0;
     let unpaid = 0;
-    
-    transactions.forEach(transaction => {
+
+    transactions.forEach((transaction) => {
       const date = new Date(transaction.date); // YYYY-MM
       const month = date.toISOString().substring(0, 7);
-      
-      if (transaction.type === 'Revenue') {
+
+      if (transaction.type === "Revenue") {
         totalRevenue += transaction.amount;
-        
+
         const currentRevenue = revenueByMonthMap.get(month) || 0;
         revenueByMonthMap.set(month, currentRevenue + transaction.amount);
-      } else if (transaction.type === 'Expense') {
+      } else if (transaction.type === "Expense") {
         totalExpenses += transaction.amount;
-        
-        const currentExpense = expensesByCategoryMap.get(transaction.category) || 0;
-        expensesByCategoryMap.set(transaction.category, currentExpense + transaction.amount);
+
+        const currentExpense =
+          expensesByCategoryMap.get(transaction.category) || 0;
+        expensesByCategoryMap.set(
+          transaction.category,
+          currentExpense + transaction.amount
+        );
       }
     });
-    
-    feeAssignments.forEach(assignment => {
+
+    feeAssignments.forEach((assignment) => {
       if (assignment.isPaid) {
         paid++;
       } else {
         unpaid++;
       }
     });
-    
+
     const revenueByMonth = Array.from(revenueByMonthMap, ([month, amount]) => ({
       month,
-      amount
+      amount,
     })).sort((a, b) => a.month.localeCompare(b.month));
-    
-    const expensesByCategory = Array.from(expensesByCategoryMap, ([category, amount]) => ({
-      category,
-      amount
-    })).sort((a, b) => b.amount - a.amount);
-    
+
+    const expensesByCategory = Array.from(
+      expensesByCategoryMap,
+      ([category, amount]) => ({
+        category,
+        amount,
+      })
+    ).sort((a, b) => b.amount - a.amount);
+
     const recentTransactions = [...transactions]
       .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
       .slice(0, 5);
-    
+
     return {
       totalRevenue,
       totalExpenses,
@@ -79,15 +102,15 @@ export function Dashboard() {
       revenueByMonth,
       expensesByCategory,
       feeStatus: { paid, unpaid },
-      recentTransactions
+      recentTransactions,
     };
   }, [transactions, feeAssignments]);
-  
+
   useEffect(() => {
     if (!organization?.id) return;
-    
+
     setIsLoading(true);
-    
+
     const unsubscribe = dbService.subscribeToTransactions(
       organization.id,
       (fetchedTransactions) => {
@@ -95,30 +118,30 @@ export function Dashboard() {
         setIsLoading(false);
       }
     );
-    
+
     const fetchFeeAssignments = async () => {
       try {
         const fees = await dbService.getFees(organization.id);
-        
+
         let allAssignments: FeeAssignment[] = [];
         for (const fee of fees) {
           const assignments = await dbService.getFeeAssignments(fee.id);
           allAssignments = [...allAssignments, ...assignments];
         }
-        
+
         setFeeAssignments(allAssignments);
       } catch (error) {
-        console.error('Error fetching fee assignments:', error);
+        console.error("Error fetching fee assignments:", error);
       }
     };
-    
+
     fetchFeeAssignments();
-    
+
     return () => {
       unsubscribe();
     };
   }, [organization?.id]);
-  
+
   const formatDate = (date: Date) => {
     return new Date(date).toLocaleDateString();
   };
@@ -131,9 +154,11 @@ export function Dashboard() {
     <div className="p-6 max-w-7xl mx-auto">
       <div className="text-left mb-6">
         <h1 className="text-2xl font-semibold">Dashboard</h1>
-        <p className="text-sm text-gray-500">View your organization's financial metrics and activities</p>
+        <p className="text-sm text-gray-500">
+          View your organization's financial metrics and activities
+        </p>
       </div>
-      
+
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
         <Card>
@@ -145,7 +170,7 @@ export function Dashboard() {
             <p className="text-sm text-gray-500">total revenue received</p>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-lg">Total Expenses</CardTitle>
@@ -155,7 +180,7 @@ export function Dashboard() {
             <p className="text-sm text-gray-500">total expenses paid</p>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-lg">Balance</CardTitle>
@@ -165,18 +190,20 @@ export function Dashboard() {
             <p className="text-sm text-gray-500">net balance</p>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-lg">Fees Status</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-3xl font-bold">{feeStatus.paid}/{feeStatus.paid + feeStatus.unpaid}</p>
+            <p className="text-3xl font-bold">
+              {feeStatus.paid}/{feeStatus.paid + feeStatus.unpaid}
+            </p>
             <p className="text-sm text-gray-500">members paid</p>
           </CardContent>
         </Card>
       </div>
-      
+
       {/* Visualizations */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
         {/* Revenue - Line Chart */}
@@ -190,20 +217,20 @@ export function Dashboard() {
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="month" />
                 <YAxis />
-                <Tooltip formatter={(value) => [`$${value}`, 'Amount']} />
+                <Tooltip formatter={(value) => [`$${value}`, "Amount"]} />
                 <Legend />
-                <Line 
-                  type="monotone" 
-                  dataKey="amount" 
-                  stroke="#2e7d32" 
+                <Line
+                  type="monotone"
+                  dataKey="amount"
+                  stroke="#2e7d32"
                   activeDot={{ r: 8 }}
-                  name="Revenue" 
+                  name="Revenue"
                 />
               </LineChart>
             </ResponsiveContainer>
           </CardContent>
         </Card>
-        
+
         {/* Expenses - Pie Chart */}
         <Card>
           <CardHeader>
@@ -221,19 +248,24 @@ export function Dashboard() {
                   fill="#8884d8"
                   dataKey="amount"
                   nameKey="category"
-                  label={({ category, percent }) => `${category}: ${(percent * 100).toFixed(0)}%`}
+                  label={({ category, percent }) =>
+                    `${category}: ${(percent * 100).toFixed(0)}%`
+                  }
                 >
-                  {expensesByCategory.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  {expensesByCategory.map((_entry, index) => (
+                    <Cell
+                      key={`cell-${index}`}
+                      fill={COLORS[index % COLORS.length]}
+                    />
                   ))}
                 </Pie>
-                <Tooltip formatter={(value) => [`$${value}`, 'Amount']} />
+                <Tooltip formatter={(value) => [`$${value}`, "Amount"]} />
                 <Legend />
               </PieChart>
             </ResponsiveContainer>
           </CardContent>
         </Card>
-        
+
         {/* Fee - Status Chart */}
         <Card>
           <CardHeader>
@@ -244,8 +276,8 @@ export function Dashboard() {
               <PieChart>
                 <Pie
                   data={[
-                    { name: 'Paid', value: feeStatus.paid },
-                    { name: 'Unpaid', value: feeStatus.unpaid }
+                    { name: "Paid", value: feeStatus.paid },
+                    { name: "Unpaid", value: feeStatus.unpaid },
                   ]}
                   cx="50%"
                   cy="50%"
@@ -253,7 +285,9 @@ export function Dashboard() {
                   outerRadius={80}
                   fill="#8884d8"
                   dataKey="value"
-                  label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                  label={({ name, percent }) =>
+                    `${name}: ${(percent * 100).toFixed(0)}%`
+                  }
                 >
                   <Cell fill="#00C49F" />
                   <Cell fill="#FF8042" />
@@ -265,7 +299,7 @@ export function Dashboard() {
           </CardContent>
         </Card>
       </div>
-      
+
       {/* Recent Transactions */}
       <h3 className="text-xl font-medium mb-4">Recent Transactions</h3>
       <Table>
@@ -281,7 +315,9 @@ export function Dashboard() {
         <TableBody>
           {recentTransactions.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={5} className="text-center">No transactions found</TableCell>
+              <TableCell colSpan={5} className="text-center">
+                No transactions found
+              </TableCell>
             </TableRow>
           ) : (
             recentTransactions.map((transaction) => (
@@ -289,8 +325,14 @@ export function Dashboard() {
                 <TableCell>{formatDate(transaction.date)}</TableCell>
                 <TableCell>{transaction.type}</TableCell>
                 <TableCell>{transaction.category}</TableCell>
-                <TableCell>{transaction.description || '-'}</TableCell>
-                <TableCell className={`text-right ${transaction.type === 'Revenue' ? 'text-green-600' : 'text-red-600'}`}>
+                <TableCell>{transaction.description || "-"}</TableCell>
+                <TableCell
+                  className={`text-right ${
+                    transaction.type === "Revenue"
+                      ? "text-green-600"
+                      : "text-red-600"
+                  }`}
+                >
                   ${transaction.amount.toFixed(2)}
                 </TableCell>
               </TableRow>

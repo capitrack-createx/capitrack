@@ -13,9 +13,6 @@ export class ValidationError extends Error {
     this.name = "ValidationError";
   }
 }
-type FeeUpdateData = Partial<Fee> & {
-  dueDate?: Date | Timestamp;
-};
 
 export const dbService = {
   // Members
