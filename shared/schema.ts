@@ -56,11 +56,12 @@ export const InsertTransactionSchema = z.object({
     return val;
   }, z.number().min(1, { message: "Amount is required" })),
   category: z.string().min(1, { message: "Category is required" }),
-  description: z.string().optional(),
+  description: z.string().min(1, { message: "Description is required" }),
   date: z.string().optional().default(() => new Date().toISOString().split('T')[0]),
   createdAt: z.date().default(() => new Date()),
   createdBy: z.string(), // Firebase UUID of authenticated users
-  orgId: z.string() // UUID of Organization
+  orgId: z.string(), // UUID of Organization
+  receiptURL: z.string().url().optional().or(z.literal('')) // URL to firebase storage location.
 })
 
 
