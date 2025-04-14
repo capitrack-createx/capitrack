@@ -297,7 +297,7 @@ export const TransactionsPage = () => {
 
                 <div className="flex justify-end">
                   <Button
-                    className="bg-green-700 hover:bg-green-800 padding:200"
+                    className="bg-green-700 hover:bg-green-800"
                     type="button"
                     onClick={() => {
                       downloadCsv(generateCsv(transactions), organization?.name + " Transactions");
