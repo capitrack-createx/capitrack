@@ -1,7 +1,7 @@
 import { collection, addDoc, getDocs, query, where, doc, getDoc, Timestamp, updateDoc, onSnapshot } from 'firebase/firestore';
 import { db } from '../firebase';
-import type { Member, Organization, Fee, FeeAssignment, Transaction } from '@shared/types';
-import { InsertMember, InsertTransaction } from '@shared/schema';
+import type { Member, Group, Organization, Fee, FeeAssignment, Transaction } from '@shared/types';
+import { InsertMember, InsertGroup, InsertTransaction } from '@shared/schema';
 
 const convertTimestampToDate = (data: any): Date => {
   return (data.dueDate || data.paidDate || data.createdAt).toDate();
@@ -51,6 +51,46 @@ export const dbService = {
       } as Member));
     } catch (error) {
       console.error('Error getting members:', error);
+      return [];
+    }
+  },
+
+  //Groups
+  async addGroup(data: InsertGroup): Promise<void> {
+    try {
+      // Check duplicate first
+      const q = query(
+        collection(db, 'groups'),
+        where('orgId', '==', data.orgId),
+        where('name', '==', data.name)
+      );
+      const snapshot = await getDocs(q);
+      if (snapshot.size > 0) {
+        throw new ValidationError('Duplicate Group')
+      }
+      await addDoc(collection(db, 'groups'), data);
+    } catch (error) {
+      console.error('Error adding group:', error);
+      if (error instanceof ValidationError) {
+        throw error;
+      }
+      throw new Error('Failed to add group');
+    }
+  },
+
+  async getGroups(orgId: string): Promise<Group[]> {
+    try {
+      const q = query(
+        collection(db, 'groups'),
+        where('orgId', '==', orgId)
+      );
+      const snapshot = await getDocs(q);
+      return snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      } as Group));
+    } catch (error) {
+      console.error('Error getting groups:', error);
       return [];
     }
   },

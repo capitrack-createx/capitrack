@@ -5,6 +5,16 @@ export interface Organization {
   createdAt: Date;
   ownerId: string; // firebase user ID who created the org
 }
+export interface Group{
+  id: string;
+  name: string;
+  orgId: string; // reference to the organization
+  size: number;
+  totalDues: number;
+  createdAt?: Timestamp;
+  members: string[];
+}
+
 export interface Member {
     id: string;
     name: string;

@@ -23,10 +23,19 @@ type Member = {
   orgId: string;
 };
 
+type Group = {
+  id: string;
+  name: string;
+  size: number;
+  members: string[];
+  orgId: string;
+};
+
 export const FeesPage = () => {
   const { user } = useAuth();
   const { organization } = useOrganization();
   const [fees, setFees] = useState<Fee[]>([]);
+  const [groups, setGroups] = useState<Group[]>([]);
   const [members, setMembers] = useState<Member[]>([]);
   const [assignments, setAssignments] = useState<
     Record<string, FeeAssignment[]>
@@ -45,6 +54,7 @@ export const FeesPage = () => {
       console.log("Organization loaded, orgId:", organization.id);
       loadFees();
       loadMembers();
+      loadGroups();
     }
   }, [organization]);
 
@@ -83,6 +93,26 @@ export const FeesPage = () => {
     } catch (error) {
       console.error("Error loading members:", error);
       setMembers([]);
+    }
+  }
+
+  async function loadGroups() {
+    if (!user || !organization) {
+      return;
+    }
+    try {
+      console.log("Loading groups for org:", organization.id);
+      const groupsData = await dbService.getGroups(organization.id);
+      console.log("Loaded groups:", groupsData);
+      if (Array.isArray(groupsData)) {
+        setGroups(groupsData);
+      } else {
+        console.error("Unexpected members data format:", groupsData);
+        setGroups([]);
+      }
+    } catch (error) {
+      console.error("Error loading groups:", error);
+      setGroups([]);
     }
   }
 
@@ -372,6 +402,36 @@ export const FeesPage = () => {
                   />
                   <Label htmlFor="assignToAll">Assign to all members</Label>
                 </div>
+
+                {!assignToAll && (
+                  <div className="border rounded-md p-4 max-h-[200px] overflow-y-auto">
+                    {groups.length === 0 ? (
+                      <div className="text-center text-muted-foreground py-2">
+                        No groups available
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        {groups.map((group) => (
+                          <div
+                            key={group.id}
+                            className="flex items-center space-x-2"
+                          >
+                            <input
+                              type="checkbox"
+                              id={`group-${group.id}`}
+                              name="groupIds"
+                              value={group.id}
+                              className="h-4 w-4 rounded border-gray-300"
+                            />
+                            <Label htmlFor={`group-${group.id}`}>
+                              {group.name}
+                            </Label>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
 
                 {!assignToAll && (
                   <div className="border rounded-md p-4 max-h-[200px] overflow-y-auto">

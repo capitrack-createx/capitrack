@@ -76,7 +76,17 @@ export const InsertMemberSchema = z.object({
   createdAt: z.date(),
 })
 
+export const InsertGroupSchema = z.object({
+  name: z.string().min(2),
+  orgId: z.string().min(5), // reference to the organization
+  size: z.number(),
+  totalDues: z.number(),
+  createdAt: z.date(),
+  members: z.array(z.string()),
+})
+
 export type InsertMember = z.infer<typeof InsertMemberSchema>;
+export type InsertGroup = z.infer<typeof InsertGroupSchema>;
 export type InsertUser = z.infer<typeof InsertUserSchema>;
 export type Role = z.infer<typeof RoleEnum>;
 export type InsertTransaction = z.infer<typeof InsertTransactionSchema>;
