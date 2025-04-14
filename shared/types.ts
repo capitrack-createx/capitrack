@@ -52,4 +52,5 @@ export interface FeeAssignment {
     createdAt: Date,
     createdBy: Date, // Firebase UUID of authenticated users
     orgId: string // UUID of Organization
+    receiptURL: string
   }

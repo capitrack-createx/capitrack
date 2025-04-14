@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -32,11 +32,22 @@ import { useAuth } from "@/services/auth-service";
 import { useOrganization } from "@/context/OrganizationContext";
 import { dbService } from "@/services/db-service";
 import { Transaction } from "@shared/types";
+import { uploadReceipt } from "@/services/storage-service";
+import { Loader2 } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 export const TransactionsPage = () => {
   const { user } = useAuth();
   const { organization } = useOrganization();
-  const [transactions, setTransactions] = React.useState<Transaction[]>([]);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [uploadFile, setUploadFile] = useState<File | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
 
   useEffect(() => {
     if (!user || !organization) return;
@@ -60,14 +71,34 @@ export const TransactionsPage = () => {
       createdBy: user!.uid,
       createdAt: new Date(),
       orgId: organization!.id,
+      receiptURL: "",
     },
   });
 
   // onSubmit will be called with validated form data
-  const onSubmit = (data: InsertTransaction) => {
-    if (!user || !organization) {
+  const onSubmit = async (data: InsertTransaction) => {
+    if (!user || !organization || isUploading) {
       return;
     }
+    setIsUploading(true);
+
+    let receiptUrl = data.receiptURL; // Initially an empty string.
+
+    // 1. Upload the file if present
+    if (uploadFile) {
+      try {
+        receiptUrl = await uploadReceipt(uploadFile);
+        // Update the hidden form field so it can be validated
+        form.setValue("receiptURL", receiptUrl);
+      } catch (error) {
+        console.error("Error uploading receipt:", error);
+        return;
+      } finally {
+        setIsUploading(false);
+      }
+    }
+
+    // 2. Create the document
     const newTransactionRecord: InsertTransaction = {
       date: data.date || new Date().toISOString().split("T")[0],
       type: data.type,
@@ -77,17 +108,19 @@ export const TransactionsPage = () => {
       createdBy: user.uid,
       createdAt: new Date(),
       orgId: organization.id,
+      receiptURL: receiptUrl,
     };
-
-    console.log(newTransactionRecord);
-    // Reset the form after a successful submission
     dbService
       .createTransactionDocument(newTransactionRecord)
       .then(() => {
         form.reset();
+        setUploadFile(null);
       })
       .catch((error) => {
         console.log("Error creating transaction:", error);
+      })
+      .finally(() => {
+        setIsUploading(false);
       });
   };
 
@@ -96,7 +129,9 @@ export const TransactionsPage = () => {
       <div className="flex flex-col gap-6">
         <div className="text-left">
           <h1 className="text-2xl font-bold">Transactions</h1>
-          <p className="text-muted-foreground">Manage all your organization transactions</p>
+          <p className="text-muted-foreground">
+            Manage all your organization transactions
+          </p>
         </div>
 
         {/* Add Transaction Section */}
@@ -201,11 +236,34 @@ export const TransactionsPage = () => {
                   )}
                 />
 
+                {/* Hidden Receipt URL Field registered with useForm */}
+                <input type="hidden" {...form.register("receiptUrl")} />
+
+                <FormItem>
+                  <FormLabel htmlFor="picture">
+                    Upload Receipt (Optional)
+                  </FormLabel>
+                  <FormControl>
+                    <Input
+                      id="picture"
+                      type="file"
+                      onChange={(e) => {
+                        if (e.target.files && e.target.files[0]) {
+                          setUploadFile(e.target.files[0]);
+                        }
+                      }}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+
                 <div className="flex justify-end">
                   <Button
+                    disabled={isUploading}
                     type="submit"
                     className="bg-green-700 hover:bg-green-800"
                   >
+                    {isUploading ? <Loader2 className="animate-spin" /> : <></>}
                     Add Transaction
                   </Button>
                 </div>
@@ -237,6 +295,7 @@ export const TransactionsPage = () => {
                 <TableHead>Type</TableHead>
                 <TableHead>Category</TableHead>
                 <TableHead>Description</TableHead>
+                <TableHead>Receipt</TableHead>
                 <TableHead className="text-right">Amount</TableHead>
               </TableRow>
             </TableHeader>
@@ -250,10 +309,48 @@ export const TransactionsPage = () => {
               ) : (
                 transactions.map((transaction, index) => (
                   <TableRow key={index}>
-                    <TableCell className="text-left">{transaction.date.toString()}</TableCell>
-                    <TableCell className="text-left">{transaction.type}</TableCell>
-                    <TableCell className="text-left">{transaction.category}</TableCell>
-                    <TableCell className="text-left">{transaction.description}</TableCell>
+                    <TableCell className="text-left">
+                      {transaction.date.toString()}
+                    </TableCell>
+                    <TableCell className="text-left">
+                      {transaction.type}
+                    </TableCell>
+                    <TableCell className="text-left">
+                      {transaction.category}
+                    </TableCell>
+                    <TableCell className="text-left">
+                      {transaction.description}
+                    </TableCell>
+                    <TableCell className="text-left">
+                      {transaction.receiptURL ? (
+                        <>
+                          {/* Pop up dialog section */}
+                          <Dialog>
+                            <DialogTrigger asChild>
+                              <Button variant="outline">View Receipt</Button>
+                            </DialogTrigger>
+                            <DialogContent className="sm:max-w-[425px]">
+                              <DialogHeader>
+                                <DialogTitle>Receipt</DialogTitle>
+                              </DialogHeader>
+                              <div className="flex justify-center my-4">
+                                <img
+                                  src={transaction.receiptURL}
+                                  alt="Receipt"
+                                  className="max-h-[400px] w-full object-contain rounded-md shadow-md"
+                                />
+                              </div>
+
+                              {/* <DialogFooter>
+                                <Button type="submit">Save changes</Button>
+                              </DialogFooter> */}
+                            </DialogContent>
+                          </Dialog>
+                        </>
+                      ) : (
+                        <></>
+                      )}
+                    </TableCell>
                     <TableCell
                       className={`text-right ${
                         transaction.type === "Revenue"

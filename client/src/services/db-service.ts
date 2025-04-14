@@ -1,5 +1,5 @@
 import { collection, addDoc, getDocs, query, where, doc, getDoc, Timestamp, updateDoc, onSnapshot, deleteDoc } from 'firebase/firestore';
-import { db } from '../firebase';
+import { db } from '@/firebase';
 import type { Member, Organization, Fee, FeeAssignment, Transaction } from '@shared/types';
 import { InsertMember, InsertTransaction } from '@shared/schema';
 
