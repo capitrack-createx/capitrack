@@ -18,7 +18,7 @@ import { Member } from "@shared/types";
 import { dbService } from "@/services/db-service";
 import { useAuth } from "@/services/auth-service";
 import { useOrganization } from "@/context/OrganizationContext";
-import { InsertMember, InsertMemberSchema } from "@shared/schema";
+import { InsertMember, InsertMemberSchema, RoleEnum } from "@shared/schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -173,6 +173,79 @@ export function MembersPage() {
                 />
               </div>
               <div className="flex justify-end">
+                <div className="relative inline-block">
+                  <input
+                    id="csv-upload"
+                    type="file"
+                    accept=".csv"
+                    className="absolute inset-0 opacity-0 cursor-pointer"
+                    onChange={(e) => {
+                      if (e.target.files && e.target.files[0]) {
+                        const reader = new FileReader();
+
+                        reader.onload = async (event) => {
+                          const csvContent = event.target?.result as string;
+                          const rows = csvContent.split("\n").map(row => row.trim()).filter(row => row);
+
+                          const headers = rows.shift()?.split(",").map(header => header.trim()) || [];
+
+                          if (headers.length === 0) {
+                            toast.error("Invalid CSV: Missing headers");
+                            return;
+                          }
+
+                          let importedCount = 0;
+
+                          for (const row of rows) {
+                            const columns = row.split(",").map(column => column.trim());
+
+                            const dataMem: InsertMember = {
+                              email: columns[headers.indexOf("email")] || "",
+                              name: columns[headers.indexOf("name")] || "",
+                              role: columns[headers.indexOf("role")]?.toUpperCase() === "ADMIN" ? "ADMIN" : "MEMBER",
+                              orgId: String(organization?.id),
+                              createdAt: new Date(),
+                              phoneNumber: columns[headers.indexOf("phoneNumber")]? columns[headers.indexOf("phoneNumber")]: undefined,
+                            };
+
+                            toast.error(dataMem.email + " " + dataMem.name + dataMem.role + " " + dataMem.phoneNumber);
+
+                            if (!dataMem.name || !dataMem.email || !dataMem.phoneNumber) {
+                              toast.error(`Invalid row: Missing required fields: ` + dataMem);
+                              continue;
+                            }
+
+                            try {
+                              const validation = InsertMemberSchema.safeParse(dataMem);
+                              if (!validation.success) {
+                                toast.error(`Invalid row for ${dataMem.email || "missing email"}`);
+                                continue;
+                              }
+
+                              await dbService.addMember(dataMem);
+                              importedCount++;
+                            } catch (err) {
+                              console.error("Failed to add member", dataMem.email, err);
+                            }
+                          }
+
+                          loadMembers();
+                          form.reset();
+                          toast.success(`Successfully imported ${importedCount} member(s)`);
+                        };
+
+                        reader.readAsText(e.target.files[0]);
+                      }
+                    }}
+                  />
+                  <label
+                    htmlFor="csv-upload"
+                    className="flex items-center padding-20 h-9 px-6 bg-[#2B8A3E] hover:bg-[#2B8A3E]/90 text-white rounded-[10px] text-sm font-medium"
+                  >
+                    Import Members
+                  </label>
+                </div>
+                <div className="w-5"></div>
                 <Button
                   disabled={isLoading}
                   type="submit"
